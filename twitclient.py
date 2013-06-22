@@ -30,7 +30,7 @@
 #
 # 0.9.2         Links now clickable, added menu item to open every link
 #                Fixed the new tweet display error
-#
+#               IDEAS: error log/console log windows
 # 
 
 from Tkinter import *
@@ -92,21 +92,23 @@ def updateDisplay(status):
         text.insert(counter, "\n")
         
         for s in reversed(status):
-                if s != status[0]:
-                        newStat = "\n<" + s.user.screen_name + "> "
-                else:
-                        newStat = "<" + s.user.screen_name + "> "
-                length = len(newStat)/100
-                for word in reversed(s.text.split(' ')):
-                        if word.split(':')[0] == 'http':
-                                text.insert(counter, " ")
-                                text.insert(counter, word, hyper.add(openLink, word))
+                try:
+                        if s != status[0]:
+                                newStat = "\n<" + s.user.screen_name + "> "
                         else:
-                                text.insert(counter, word + " ")
-#                text.insert(counter+len(s.text),"\n")
-                text.insert(counter, newStat, "a")
-                
-#                counter += 1
+                                newStat = "<" + s.user.screen_name + "> "
+                        length = len(newStat)/100
+                        for word in reversed(s.text.split(' ')):
+                                if word.split(':')[0] == 'http':
+                                        text.insert(counter, " ")
+                                        text.insert(counter, word, hyper.add(openLink, word))
+                                else:
+                                        text.insert(counter, word + " ")
+#                                text.insert(counter+len(s.text),"\n")
+                        text.insert(counter, newStat, "a")
+                                
+                except TclError:
+                        print "Whoa now, some kinda f-ed up text here"
         
         text.config(state=DISABLED)
 
