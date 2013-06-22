@@ -36,15 +36,22 @@
 #
 # 0.9.4         Added a console option. This prints out the errors/thread
 #                info that typically gets printed to the console to a 
-#                GUI window for users not running from console
+#                GUI window for users not running from console. Also
+#                https links now work
+#               IDEAS: make ERR a list that contains the backlog of errors
+#                and/or messages. Make console display the backlog of
+#                errors whenever it gets started
+
+import twitter
+import threading
+import tkHyperlinkManager
 
 from Tkinter import *
 from os import path
-import twitter
-import threading
 from urllib2 import URLError
 from time import sleep
-import tkHyperlinkManager
+from time import ctime
+
 
 global STREAM_UPDATE
 STREAM_UPDATE = True
@@ -68,7 +75,7 @@ class conDialog(Toplevel):
                 
                 self.running = True
                 
-                self.logger = Text(self.top, width=30, height=15)
+                self.logger = Text(self.top, width=50, height=15)
                 self.logger.pack(fill=BOTH, expand=1)
                 
                 self.close = Button(self.top, text="Close", command=self.closeThisWindow)
@@ -151,7 +158,7 @@ def updateDisplay(status):
                                 
                 except TclError:
                         if CON != None:
-                                CON.placeText("A Tcl Character error occured, the offending tweet wasn't displayed\n")
+                                CON.placeText(ctime() + "- A Tcl Character error occured, the offending tweet wasn't displayed\n")
                         else:
                                 print "A Tcl Character error occured, the offending tweet wasn't displayed"
         
@@ -174,7 +181,7 @@ def openLink(link):
 # shows the console
 def showConsole():
         if CON != None:
-                CON.placeText("Console already shown\n")
+                CON.placeText(ctime() + "Console already shown\n")
         else:
                 global CON
                 CON = console = conDialog(root, "Console")
@@ -245,7 +252,7 @@ def update(shot, last_id):
                                 counter += 1
                         except twitter.TwitterError:
                                 if CON != None:
-                                        CON.placeText("There was a Twitter problem getting the tweets\n")
+                                        CON.placeText(ctime() + "- There was a Twitter problem getting the tweets\n")
                                 else:
                                         print "There was a Twitter problem getting the tweet"
                                 for i in range(18):
@@ -257,7 +264,7 @@ def update(shot, last_id):
                                         break
                         except URLError:
                                 if CON != None:
-                                        CON.placeText("There was a network issue when getting the tweets\n")
+                                        CON.placeText(ctime() + "- There was a network issue when getting the tweets\n")
                                 else:
                                         print "There was a network issue when getting the tweets"
                                 for i in range(18):
@@ -279,12 +286,12 @@ def update(shot, last_id):
                                 updateDisplay(STATUSES)
                 except twitter.TwitterError:
                         if CON != None:
-                                CON.placeText("There was a Twitter problem getting the tweets\n")
+                                CON.placeText(ctime() + "- There was a Twitter problem getting the tweets\n")
                         else:
                                 print "There was a Twitter problem getting the tweet"
                 except URLError:
                         if CON != None:
-                                CON.placeText("There was a network issue when getting the tweets\n")
+                                CON.placeText(ctime() + "- There was a network issue when getting the tweets\n")
                         else:
                                 print "There was a network issue when getting the tweets"
 
@@ -318,7 +325,6 @@ try:
 #        global LAST_ID
 #        LAST_ID = STATUSES[0].id
 except URLError:
-        print "Uh-oh"
         ERR = "There was a problem opening the network connection. Please ensure that your computer is online."
 except twitter.TwitterError:
         ERR = "Your timeline could not be retrieved at this time.\nPlease try again later."
@@ -330,7 +336,7 @@ try:
         
         UPDATE_THREAD.start()
 except:
-        print("Error: threads are hard!")
+        print(ctime() + "- Streaming update thread failed to start. Updating will have to be done manually.")
 
 # 
 # STARTS SETTING UP TK GUI STUFF
@@ -388,6 +394,6 @@ try:
         NUMBER_THREAD = upThread(1, "numbers", entry)
         NUMBER_THREAD.start()
 except:
-        print("Well, no character count...")
+        print(ctime() + "- Starting the thread for numbers failed. Character counting will not be operational")
 
 root.mainloop()
