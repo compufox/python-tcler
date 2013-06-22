@@ -33,6 +33,10 @@
 #
 # 0.9.3         Added some error handling for character for the Tkinter 
 #                Text widget
+#
+# 0.9.4         Added a console option. This prints out the errors/thread
+#                info that typically gets printed to the console to a 
+#                GUI window for users not running from console
 
 from Tkinter import *
 from os import path
@@ -51,6 +55,34 @@ LAST_ID = None
 global TEXT
 TEXT = None
 
+global CON
+CON = None
+
+class conDialog(Toplevel):
+        def __init__(self, parent, title):
+                self.top = Toplevel(parent)
+                self.top.wm_title(title)
+                self.parent = parent
+                
+                self.running = True
+                
+                self.logger = Text(self.top, width=30, height=15)
+                self.logger.pack()
+                
+                self.close = Button(self.top, text="Close", command=self.closeThisWindow)
+                self.close.pack()
+                
+                self.logger.config(state=DISABLED)
+
+        def closeThisWindow(self):
+#                self.parent.focus_set()
+                self.top.destroy()
+                
+        def placeText(self, errors):
+                self.logger.config(state=NORMAL)
+                self.logger.insert(INSERT, errors)
+                self.logger.config(state=DISABLED)
+
 class upThread (threading.Thread):
         def __init__(self, threadID, name, args):
                 threading.Thread.__init__(self)
@@ -65,6 +97,9 @@ class upThread (threading.Thread):
                         self.tweet_id = args
                 
         def run(self):
+#                if CON != None:
+#                        CON.placeText(self.name + " starting...\n")
+#                else:
                 print(self.name + " starting...")
                 if self.name == "update":
                         if self.tweet_id != 1:
@@ -75,9 +110,12 @@ class upThread (threading.Thread):
                         numbers(self.entry)
                 elif self.name == "post":
                         post()
+#                if CON != None:
+#                        CON.placeText(self.name + " exiting...\n")
+#                else:
                 print(self.name + " exiting...")
         def getName(self):
-                print(self.name)
+                return(self.name)
         
 
 # updates the text in the text widget with supplied tuple(?) of
@@ -100,7 +138,7 @@ def updateDisplay(status):
                                 newStat = "<" + s.user.screen_name + "> "
                         length = len(newStat)/100
                         for word in reversed(s.text.split(' ')):
-                                if word.split(':')[0] == 'http':
+                                if word.split(':')[0] == 'http' or word.split(':')[0] == 'https':
                                         text.insert(counter, " ")
                                         text.insert(counter, word, hyper.add(openLink, word))
                                 else:
@@ -109,7 +147,10 @@ def updateDisplay(status):
                         text.insert(counter, newStat, "a")
                                 
                 except TclError:
-                        print "Whoa now, some kinda f-ed up text here"
+                        if CON != None:
+                                CON.placeText("A Tcl Character error occured, the offending tweet wasn't displayed\n")
+                        else:
+                                print "A Tcl Character error occured, the offending tweet wasn't displayed"
         
         text.config(state=DISABLED)
 
@@ -126,6 +167,14 @@ def oneShotUpdate():
 def openLink(link):
         import webbrowser as webb
         webb.open(link)
+
+# shows the console
+def showConsole():
+        if CON != None:
+                CON.placeText("Console already shown\n")
+        else:
+                global CON
+                CON = console = conDialog(root, "Console")
 
 # posts the status updates
 def post():
@@ -146,6 +195,10 @@ def quit(thread):
         global STREAM_UPDATE
         STREAM_UPDATE = False
         thread.join()
+        
+        if CON != None:
+                CON.top.destroy()
+        
         sys.exit()
 
 # starts a thread to run the post function. (Made this just so the GUI 
@@ -188,7 +241,10 @@ def update(shot, last_id):
                                         break
                                 counter += 1
                         except twitter.TwitterError:
-                                print "There was a Twitter problem getting the tweet"
+                                if CON != None:
+                                        CON.placeText("There was a Twitter problem getting the tweets\n")
+                                else:
+                                        print "There was a Twitter problem getting the tweet"
                                 for i in range(18):
                                         sleep(5)
                                         if STREAM_UPDATE != True:
@@ -197,7 +253,10 @@ def update(shot, last_id):
                                 if STREAM_UPDATE != True:
                                         break
                         except URLError:
-                                print "There was a network issue when getting the tweets"
+                                if CON != None:
+                                        CON.placeText("There was a network issue when getting the tweets\n")
+                                else:
+                                        print "There was a network issue when getting the tweets"
                                 for i in range(18):
                                         sleep(5)
                                         if STREAM_UPDATE != True:
@@ -226,7 +285,6 @@ red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
 ASS_KEY = red[0]
 ASS_SECRET = red[1]
 
-
 # get the API reference
 api = twitter.Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
 		  consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
@@ -247,13 +305,13 @@ try:
 #        global LAST_ID
 #        LAST_ID = STATUSES[0].id
 except URLError:
-        print("Uh-oh")
+        print "Uh-oh"
         ERR = "There was a problem opening the network connection. Please ensure that your computer is online."
 except twitter.TwitterError:
         ERR = "Your timeline could not be retrieved at this time.\nPlease try again later."
 
 # tries to start a thread that just constantly runs the update function
-#  (see the update function docs for more info
+#  (see the update function docs for more info)
 try:
         UPDATE_THREAD = upThread(0, "update", LAST_ID)
         
@@ -270,9 +328,6 @@ root.wm_minsize(width=200,height=400)
 
 global TEXT
 TEXT = StringVar(root)
-
-#frame = Frame(root)
-#frame.pack(expand=1)
 
 scroll = Scrollbar(root)
 scroll.pack(side=RIGHT, fill=Y,expand=0)
@@ -302,6 +357,7 @@ scroll.config(command=text.yview)
 
 menu = Menu(root)
 menu.add_command(label="Update", command=oneShotUpdate)
+menu.add_command(label="Console", command=showConsole)
 menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 root.config(menu=menu)
 
