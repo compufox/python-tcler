@@ -7,6 +7,15 @@
 #
 # Version       Changelog
 #-------------------------------------------------------------------------------
+# 0.1           original tcl gui code written
+#
+# 0.2           got the unique api code hardcoded
+#
+# 0.4           added threads to improve GUI performace
+#
+# 0.6           changed a lot of the display code to make it more
+#                robust and applicable
+#
 # 0.8           can pull tweets from timeline, can post tweets
 #                tweet's author is easily distenguished from tweets
 #
@@ -17,10 +26,10 @@
 #                values of my creds and made it check ~/.tcler for
 #                the user's key & token. 
 #               IDEAS: make links clickable. scan through each tweet
-#                that comes in, and make each hyperlink clickable.
+#                that comes in, and make each hyperlink clickable. (DONE)
 #
 # 0.9.2         Links now clickable, added menu item to open every link
-#                Fixed the new tweet format error
+#                Fixed the new tweet display error
 #
 # 
 
