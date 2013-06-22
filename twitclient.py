@@ -62,21 +62,24 @@ class conDialog(Toplevel):
         def __init__(self, parent, title):
                 self.top = Toplevel(parent)
                 self.top.wm_title(title)
+                self.top.wm_minsize(width=200, height=250)
+                
                 self.parent = parent
                 
                 self.running = True
                 
                 self.logger = Text(self.top, width=30, height=15)
-                self.logger.pack()
+                self.logger.pack(fill=BOTH, expand=1)
                 
                 self.close = Button(self.top, text="Close", command=self.closeThisWindow)
-                self.close.pack()
+                self.close.pack(fill=X,expand=0)
                 
                 self.logger.config(state=DISABLED)
 
         def closeThisWindow(self):
-#                self.parent.focus_set()
                 self.top.destroy()
+                global CON
+                CON = None
                 
         def placeText(self, errors):
                 self.logger.config(state=NORMAL)
@@ -266,14 +269,24 @@ def update(shot, last_id):
                                         break
                         
         else:
-                STATUSES = ()
-                STATUSES = api.GetHomeTimeline(since_id=last_id)
+                try:
+                        STATUSES = ()
+                        STATUSES = api.GetHomeTimeline(since_id=last_id)
                 
-                if len(STATUSES) > 0:
-                        global LAST_ID
-                        LAST_ID = STATUSES[0].id
-                        updateDisplay(STATUSES)
-                
+                        if len(STATUSES) > 0:
+                                global LAST_ID
+                                LAST_ID = STATUSES[0].id
+                                updateDisplay(STATUSES)
+                except twitter.TwitterError:
+                        if CON != None:
+                                CON.placeText("There was a Twitter problem getting the tweets\n")
+                        else:
+                                print "There was a Twitter problem getting the tweet"
+                except URLError:
+                        if CON != None:
+                                CON.placeText("There was a network issue when getting the tweets\n")
+                        else:
+                                print "There was a network issue when getting the tweets"
 
 ASS_KEY = None
 ASS_SECRET = None
