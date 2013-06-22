@@ -30,8 +30,9 @@
 #
 # 0.9.2         Links now clickable, added menu item to open every link
 #                Fixed the new tweet display error
-#               IDEAS: error log/console log windows
-# 
+#
+# 0.9.3         Added some error handling for character for the Tkinter 
+#                Text widget
 
 from Tkinter import *
 from os import path
