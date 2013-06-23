@@ -301,7 +301,7 @@ ASS_SECRET = None
 from platform import system
 
 if system() == "Windows":
-        if not path.exists(path.expanduser('%APPDATA%\tcler.txt'):
+        if not path.exists(path.expanduser('%APPDATA%\tcler.txt')):
                 import get_access_token
 else:
         # this assumes that if you aren't on windows, then
@@ -309,6 +309,7 @@ else:
         #  OS X)
         if not path.exists(path.expanduser('~/.tcler')):
                 import get_access_token
+        
 
 red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
 ASS_KEY = red[0]
