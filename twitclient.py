@@ -44,9 +44,9 @@
 #
 # 0.9.5         All messages/errors are stored in ERR which is now a global 
 #                list. When the console is started the backlog of messages
-#                (stored in ERR) are vomited into the console. These backlog
-#                messages are greyed out, where as the new messages are 
-#                not greyed. 
+#                (stored in ERR) is vomited into the console. These backlog
+#                messages are greyed out, whereas the new messages are 
+#                not greyed.
 
 import twitter
 import threading
@@ -59,18 +59,27 @@ from time import sleep
 from time import localtime
 from platform import system
 
+#
+# GLOBAL VARIABLE DECLARATION
+#
+
+# log of errors
 global ERR
 ERR = list()
 
+# bool that helps stop the threads
 global STREAM_UPDATE
 STREAM_UPDATE = True
 
+# the id of the last tweet
 global LAST_ID
 LAST_ID = None
 
+# Tkinter StringVar (used for updating the character count
 global TEXT
 TEXT = None
 
+# conDialog reference that is used for checks
 global CON
 CON = None
 
@@ -87,6 +96,7 @@ class conDialog(Toplevel):
                 
                 self.logger = Text(self.top, width=50, height=15)
                 self.logger.pack(fill=BOTH, expand=1)
+                self.logger.config(wrap=WORD)
                 
                 self.close = Button(self.top, text="Close", command=self.closeThisWindow)
                 self.close.pack(fill=X,expand=0)
@@ -100,6 +110,8 @@ class conDialog(Toplevel):
                 
                 self.logger.config(state=DISABLED)
 
+        # destroys this Toplevel widget while making note of the console closing
+        #  and by setting the CON variable to None
         def closeThisWindow(self):
                 self.placeText(getTime() + "- Console closed")
                 
@@ -107,14 +119,18 @@ class conDialog(Toplevel):
                 global CON
                 CON = None
                 
-        def placeText(self, errors):
-                errors += "\n"
+        # method that places the text inside the log thats in the console
+        #  also stores the messages in the backlog (ERR)
+        def placeText(self, message):
+                message += "\n"
                 
                 self.logger.config(state=NORMAL)
-                ERR.append(errors)
-                self.logger.insert(INSERT, errors)
+                ERR.append(message)
+                self.logger.insert(INSERT, message)
                 self.logger.config(state=DISABLED)
 
+# class that instantiates a thread which, based off of the name, thread id and arguments
+#  does certain jobs
 class upThread (threading.Thread):
         def __init__(self, threadID, name, args):
                 threading.Thread.__init__(self)
@@ -128,6 +144,7 @@ class upThread (threading.Thread):
                 elif name == "post":
                         self.tweet_id = args
                 
+        # starts the threads while making a note in the backlog/console
         def run(self):
                 if CON != None and not self.threadID < 2:
                         CON.placeText(getTime() + "- " + self.name + "-" + str(self.threadID) + " starting...")
@@ -150,6 +167,8 @@ class upThread (threading.Thread):
                         CON.placeText(getTime() + "- " +self.name + "-" + str(self.threadID) + " exiting...")
                 else:
                         print(self.name + " exiting...")
+        
+        # returns the name of the thread
         def getName(self):
                 return(self.name)
         
@@ -204,7 +223,7 @@ def openLink(link):
         import webbrowser as webb
         webb.open(link)
 
-# shows the console
+# shows the console toplevel widget
 def showConsole():
         if CON != None:
                 CON.placeText(getTime() + "- Console already shown")
@@ -226,6 +245,8 @@ def numbers(entry):
                 TEXT.set(140 - len(entry.get()))
                 sleep(.1)
 
+# just an easy method that makes it easier to get the
+#  current local time in the correct format
 def getTime():
         return str(localtime().tm_hour) + ":" + str(localtime().tm_min) + ":" + str(localtime().tm_sec) + " "
 
@@ -321,13 +342,16 @@ def update(shot, last_id):
                         else:
                                 print "There was a network issue when getting the tweets"
 
+# creates the access_token secret and key variables to use to get the api reference
 ASS_KEY = None
 ASS_SECRET = None
 
+# sets the local err variable to None, meaning that no errors have happened yet.
+#  this is used because ERR is already set to not be None, so ERR != None will 
+#  always return True
 err = None
 
-from platform import system
-
+# OS checking code. (NOTE: Untested. Hopefully it works)
 if system() == "Windows":
         if not path.exists(path.expanduser('%APPDATA%\tcler.txt')):
                 import get_access_token
@@ -418,6 +442,12 @@ menu.add_command(label="Console", command=showConsole)
 menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 root.config(menu=menu)
 
+#
+# END OF TK GUI STUFF
+#
+
+# tries to start the number thread to keep track of the
+#  character count
 try:
         NUMBER_THREAD = upThread(1, "numbers", entry)
         NUMBER_THREAD.start()
@@ -427,13 +457,15 @@ except:
         
         ERR.append(getTime() + "- Starting the thread for numbers failed. Character counting will not be operational")
         err.append(ERR[len(ERR)-1])
+
+# if the local variable err is still None, then no errors 
+#  occured since start up, otherwise a message is printed 
+#  saying to check the log (which, when opened will be 
+#  populated with all of the error messages, or otherwise,
+#  that will hopefully help the user find the problem)
 if err != None:
         text.config(state=NORMAL)
         text.insert(1.0, "Something has gone wrong, please check the console")
-
-#
-# END OF TK GUI STUFF
-#
 
 # tries to start a thread that will keep the character count
 #  see the docs on the numbers function
