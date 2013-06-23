@@ -19,6 +19,8 @@ import os
 import sys
 import Tkinter
 
+from platform import system
+
 # parse_qsl moved to urlparse module in v2.6
 try:
   from urlparse import parse_qsl
@@ -27,10 +29,12 @@ except:
 
 import oauth2 as oauth
 
+# open the oauth link in a  browser
 def click(event=None):
   import webbrowser as webb
   webb.open(LINK)
 
+# retrieves the pincode from the entry widget
 def getInfo():
   pincode = entry.get()
   
@@ -53,7 +57,11 @@ def getInfo():
     root.destroy()
 
 def writeInfo(key, secret):
-  open(os.path.expanduser('~/.tcler'), 'w+').write(key + '\n' + secret)
+  if system() == 'Windows':
+    open(os.path.expanduser('%APPDATA%\tcler.txt'), 'w+').write(key +'\n'+ secret)
+  else:
+    # assuming a Linux based system (including OS X)
+    open(os.path.expanduser('~/.tcler'), 'w+').write(key + '\n' + secret)
 
 REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
 ACCESS_TOKEN_URL  = 'https://api.twitter.com/oauth/access_token'
@@ -68,6 +76,7 @@ consumer_secret = '53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8'
 signature_method_hmac_sha1 = oauth.SignatureMethod_HMAC_SHA1()
 oauth_consumer             = oauth.Consumer(key=consumer_key, secret=consumer_secret)
 oauth_client               = oauth.Client(oauth_consumer)
+
 
 print 'Requesting temp token from Twitter'
 

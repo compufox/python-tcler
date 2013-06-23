@@ -298,8 +298,17 @@ def update(shot, last_id):
 ASS_KEY = None
 ASS_SECRET = None
 
-if not path.exists(path.expanduser('~/.tcler')):
-       import get_access_token
+from platform import system
+
+if system() == "Windows":
+        if not path.exists(path.expanduser('%APPDATA%\tcler.txt'):
+                import get_access_token
+else:
+        # this assumes that if you aren't on windows, then
+        #  you are running some Unix based system (including
+        #  OS X)
+        if not path.exists(path.expanduser('~/.tcler')):
+                import get_access_token
 
 red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
 ASS_KEY = red[0]
