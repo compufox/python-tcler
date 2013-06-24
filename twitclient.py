@@ -113,7 +113,6 @@ class HyperlinkManager:
         def reset(self):
                 self.links = {}
         def add(self, action, text, thisTag):
-                print (action, text)
                 tag = thisTag + "-%d" % len(self.links)
                 self.links[tag] = (action,text)
                 return thisTag, tag
@@ -122,7 +121,6 @@ class HyperlinkManager:
         def _leave(self, event):
                 self.text.config(cursor="")
         def _click(self, thisTag, event = None):
-                print thisTag
                 for tag in self.text.tag_names(CURRENT):
                         if tag[:(len(thisTag) + 1)] == thisTag + "-":
                                 self.links[tag][0](self.links[tag][1])
@@ -167,11 +165,9 @@ class conDialog(Toplevel):
         # method that places the text inside the log thats in the console
         #  also stores the messages in the backlog (ERR)
         def placeText(self, message):
-                message += "\n"
-                
                 self.logger.config(state=NORMAL)
                 ERR.append(message)
-                self.logger.insert(INSERT, message)
+                self.logger.insert(INSERT, message + "\n")
                 self.logger.config(state=DISABLED)
 
 # class that instantiates a thread which, based off of the name, thread id and arguments
@@ -195,6 +191,8 @@ class upThread (threading.Thread):
                         CON.placeText(getTime() + "- " + self.name + "-" + str(self.threadID) + " starting...")
                 elif self.threadID < 2:
                         ERR.append(getTime() + "- " + self.name + "-" + str(self.threadID) + " starting...")
+                elif CON == None and not self.threadID < 2:
+                        ERR.append(getTime() + "- " + self.name + "-" + str(self.threadID) + " starting...")
                 else:
                         print(self.name + " starting...")
                 if self.name == "update":
@@ -208,8 +206,8 @@ class upThread (threading.Thread):
                         post()
                 if CON != None and not self.threadID < 2:
                         CON.placeText(getTime() + "- " +self.name + "-" + str(self.threadID) + " exiting...")
-                elif CON != None and self.threadID < 2:
-                        CON.placeText(getTime() + "- " +self.name + "-" + str(self.threadID) + " exiting...")
+                elif CON == None and not self.threadID < 2:
+                        ERR.append(getTime() + "- " + self.name + "-" + str(self.threadID) + " exiting...")
                 else:
                         print(self.name + " exiting...")
         
@@ -267,7 +265,7 @@ def oneShotUpdate():
 # 
 def clickAuthor(handle):
         handle = handle.split('<')[1].split('>')[0]
-        entry.insert(INSERT, "@" + handle)
+        entry.insert(INSERT, "@" + handle + " ")
 
 # supplies the callback to open links in the default
 #  web browser
@@ -347,7 +345,6 @@ def update(shot, last_id):
                                                 
                                 if STREAM_UPDATE != True:
                                         break
-                                counter += 1
                         except twitter.TwitterError:
                                 if CON != None:
                                         CON.placeText(getTime() + "- There was a Twitter problem getting the tweets")
