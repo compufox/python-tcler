@@ -150,14 +150,14 @@ class conDialog(Toplevel):
                 for e in ERR:
                         self.logger.insert(INSERT, e + "\n", 'backlog')
                 
-                self.placeText(getTime() + "- Console Started")
+#                self.placeText(getTime() + "- Console Started")
                 
                 self.logger.config(state=DISABLED)
 
         # destroys this Toplevel widget while making note of the console closing
         #  and by setting the CON variable to None
         def closeThisWindow(self):
-                self.placeText(getTime() + "- Console closed")
+#                self.placeText(getTime() + "- Console closed")
                 
                 self.top.destroy()
                 global CON
