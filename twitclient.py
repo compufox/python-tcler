@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 #
-# Zachary Epps, 2013
+# Copyright (c) 2013, theZacAttacks
+#
 #
 # A simple little twitter client written using the python-twitter
 #  module and tcl for a GUI.
@@ -52,6 +53,10 @@
 #                out the 'post' box with their username, allowing easier
 #                tweets at a person. Also, incorporated tkHyperLinkManager
 #                into the main file.
+#               IDEAS: Make the hashtags clickable which opens a Toplevel
+#                box that lists the search results. Incorporate a search
+#                function into the client itself, accessable via a menu
+#                button. 
 
 import twitter
 import threading
