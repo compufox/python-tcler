@@ -127,7 +127,15 @@ class HyperlinkManager:
                                 self.links[tag][0](self.links[tag][1])
                                 return
 
-# a simple class that allows for a Toplevel widget to become active with the console log
+class searchDialog(Toplevel):
+        def __init__(self, parent, title):
+                self.top = Toplevel(parent)
+                self.top.wm_title(title)
+                
+                self.searchy = Text(self.top)
+                
+
+# a small class that allows for a Toplevel widget to become active with the console log
 class conDialog(Toplevel):
         def __init__(self, parent, title):
                 self.top = Toplevel(parent)
@@ -135,8 +143,6 @@ class conDialog(Toplevel):
                 self.top.wm_minsize(width=200, height=250)
                 
                 self.parent = parent
-                
-                self.running = True
                 
                 self.logger = Text(self.top, width=50, height=15)
                 self.logger.pack(fill=BOTH, expand=1)
