@@ -47,10 +47,15 @@
 #                (stored in ERR) is vomited into the console. These backlog
 #                messages are greyed out, whereas the new messages are 
 #                not greyed.
+#
+# 0.9.6         Clicking a user's handle (the text in red) will now fill
+#                out the 'post' box with their username, allowing easier
+#                tweets at a person. Also, incorporated tkHyperLinkManager
+#                into the main file.
 
 import twitter
 import threading
-import tkHyperlinkManager
+import webbrowser
 
 from Tkinter import *
 from os import path
@@ -82,6 +87,41 @@ TEXT = None
 # conDialog reference that is used for checks
 global CON
 CON = None
+
+# class that helps handle the task of managing the various 'clicky' actions for text
+class HyperlinkManager:
+        
+        def __init__(self, text):
+                
+                self.text = text
+                
+                self.text.tag_config("hyper", foreground="blue", underline=1)
+                
+                self.text.tag_bind("hyper", "<Enter>", self._enter)
+                self.text.tag_bind("hyper", "<Leave>", self._leave)
+                self.text.tag_bind("hyper", "<Button-1>", lambda x: self._click("hyper"))
+                
+                self.text.tag_config("handle", foreground="red")
+                self.text.tag_bind("handle", "<Button-1>", lambda x: self._click("handle"))
+                
+                self.reset()
+        def reset(self):
+                self.links = {}
+        def add(self, action, text, thisTag):
+                print (action, text)
+                tag = thisTag + "-%d" % len(self.links)
+                self.links[tag] = (action,text)
+                return thisTag, tag
+        def _enter(self, event):
+                self.text.config(cursor="hand2")
+        def _leave(self, event):
+                self.text.config(cursor="")
+        def _click(self, thisTag, event = None):
+                print thisTag
+                for tag in self.text.tag_names(CURRENT):
+                        if tag[:(len(thisTag) + 1)] == thisTag + "-":
+                                self.links[tag][0](self.links[tag][1])
+                                return
 
 # a simple class that allows for a Toplevel widget to become active with the console log
 class conDialog(Toplevel):
@@ -180,6 +220,7 @@ class upThread (threading.Thread):
 def updateDisplay(status):
         text.config(state=NORMAL)
         
+ #       withNewLine = 0
         newStat = "< > "
         counter = 1.0
         
@@ -189,18 +230,19 @@ def updateDisplay(status):
                 try:
                         if s != status[0]:
                                 newStat = "\n<" + s.user.screen_name + "> "
+#                                withNewLine = 1
                         else:
                                 newStat = "<" + s.user.screen_name + "> "
                         length = len(newStat)/100
                         for word in reversed(s.text.split(' ')):
                                 if word.split(':')[0] == 'http' or word.split(':')[0] == 'https':
                                         text.insert(counter, " ")
-                                        text.insert(counter, word, hyper.add(openLink, word))
+                                        text.insert(counter, word, hyper.add(clickLink, word, "hyper"))
                                 else:
                                         text.insert(counter, word + " ")
-                                
-                        text.insert(counter, newStat, "a")
-                                
+                        
+                        text.insert(counter, newStat, hyper.add(clickAuthor, newStat, "handle"))
+                
                 except TclError:
                         if CON != None:
                                 CON.placeText(getTime() + "- A Tcl Character error occured, the offending tweet wasn't displayed")
@@ -217,11 +259,15 @@ def oneShotUpdate():
         one_update = upThread(3, "update", 1)
         one_update.start()
 
+# 
+def clickAuthor(handle):
+        handle = handle.split('<')[1].split('>')[0]
+        entry.insert(INSERT, "@" + handle)
+
 # supplies the callback to open links in the default
 #  web browser
-def openLink(link):
-        import webbrowser as webb
-        webb.open(link)
+def clickLink(link):
+        webbrowser.open(link)
 
 # shows the console toplevel widget
 def showConsole():
@@ -422,9 +468,9 @@ scroll.pack(side=RIGHT, fill=Y,expand=0)
 text = Text(root, yscrollcommand=scroll.set)
 text.config(state=DISABLED, wrap=WORD)
 text.pack(fill=BOTH, expand=1)
-text.tag_config("a", foreground="red")
+#text.tag_config("a", foreground="red")
 
-hyper = tkHyperlinkManager.HyperlinkManager(text)
+hyper = HyperlinkManager(text)
 
 post_button = Button(root, text="Post", command=postThreader)
 post_button.pack(side=RIGHT, fill=BOTH, expand=0)
@@ -441,7 +487,6 @@ menu.add_command(label="Update", command=oneShotUpdate)
 menu.add_command(label="Console", command=showConsole)
 menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 root.config(menu=menu)
-
 #
 # END OF TK GUI STUFF
 #
