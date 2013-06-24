@@ -298,7 +298,13 @@ def numbers(entry):
 # just an easy method that makes it easier to get the
 #  current local time in the correct format
 def getTime():
-        return str(localtime().tm_hour) + ":" + str(localtime().tm_min) + ":" + str(localtime().tm_sec) + " "
+        secs = None
+        if localtime().tm_sec < 10:
+                secs = "0" + str(localtime().tm_sec) + " "
+        else:
+                secs = str(localtime().tm_sec) + " "
+    
+        return str(localtime().tm_hour) + ":" + str(localtime().tm_min) + ":" + secs
 
 # quits the threads and destroys the widgets
 def quit(thread):
