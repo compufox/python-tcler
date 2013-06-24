@@ -61,6 +61,7 @@
 import twitter
 import threading
 import webbrowser
+import get_access_token
 
 from Tkinter import *
 from os import path
@@ -402,13 +403,13 @@ err = None
 # OS checking code. (NOTE: Untested. Hopefully it works)
 if system() == "Windows":
         if not path.exists(path.expanduser('%APPDATA%\tcler.txt')):
-                import get_access_token
+                get_access_token.startLogin()
 else:
         # this assumes that if you aren't on windows, then
         #  you are running some Unix based system (including
         #  OS X)
         if not path.exists(path.expanduser('~/.tcler')):
-                import get_access_token
+                get_access_token.startLogin()
         
 # gets the user's creds and splits the key and secret up
 red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
