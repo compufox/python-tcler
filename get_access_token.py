@@ -14,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # MODIFIED BY theZacAttacks for GUI, file, and Windows support
-
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import os
 import sys
@@ -43,7 +44,7 @@ def click(event=None):
   webbrowser.open(LINK)
 
 # retrieves the pincode from the entry widget
-def getInfo(oauth_consumer):
+def getInfo(oauth_consumer, root):
   if ENTRY.get() != "":
     pincode = ENTRY.get()
   else:
@@ -120,7 +121,7 @@ def startLogin():
   ENTRY = Tkinter.Entry(root)
   ENTRY.pack(side=Tkinter.BOTTOM, fill=Tkinter.BOTH)
   
-  button = Tkinter.Button(root,text='Submit', command=lambda: getInfo(oauth_consumer))
+  button = Tkinter.Button(root,text='Submit', command=lambda: getInfo(oauth_consumer, root))
   button.pack(side=Tkinter.RIGHT, fill=Tkinter.BOTH, expand=1)
   
   click()
