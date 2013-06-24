@@ -24,3 +24,5 @@ Based on the [python-twitter](https://github.com/bear/python-twitter)
 - View user's timeline
 
 - Regular search feature
+
+- Retweet tweets by clicking on them
