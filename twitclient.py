@@ -412,7 +412,16 @@ else:
                 get_access_token.startLogin()
         
 # gets the user's creds and splits the key and secret up
-red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
+try:
+        red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
+except:
+        ERR.append(getTime() + "- Your credential file could not be opened. Did you login?")
+        red = ['nope', 'nothing']
+        if err == None:
+                err = list()
+        else:
+                err.append(ERR[len(ERR)-1])
+
 ASS_KEY = red[0]
 ASS_SECRET = red[1]
 

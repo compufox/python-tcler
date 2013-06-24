@@ -20,6 +20,7 @@
 import os
 import sys
 import Tkinter
+import webbrowser
 
 from platform import system
 
@@ -31,16 +32,23 @@ except:
 
 import oauth2 as oauth
 
+global REQ_TOK
+REQ_TOK = None
+
+global ENTRY
+ENTRY = None
+
 # open the oauth link in a  browser
 def click(event=None):
-  import webbrowser as webb
-  webb.open(LINK)
+  webbrowser.open(LINK)
 
 # retrieves the pincode from the entry widget
-def getInfo():
-  pincode = entry.get()
-  
-  token = oauth.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
+def getInfo(oauth_consumer):
+  if ENTRY.get() != "":
+    pincode = ENTRY.get()
+  else:
+    pincode = 12345
+  token = oauth.Token(REQ_TOK['oauth_token'], REQ_TOK['oauth_token_secret'])
   token.set_verifier(pincode)
   
   oauth_client  = oauth.Client(oauth_consumer, token)
@@ -73,6 +81,10 @@ SIGNIN_URL        = 'https://api.twitter.com/oauth/authenticate'
 def startLogin():
   
   root = Tkinter.Tk()
+  root.wm_title("Authorize this application")
+  
+  root.wm_maxsize(width=800,height=80)
+  root.wm_minsize(width=750,height=80)
   
   consumer_key    = 'qJwaqOuIuvZKlxwF4izCw'
   consumer_secret = '53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8'
@@ -89,25 +101,27 @@ def startLogin():
   if resp['status'] != '200':
     print 'Invalid respond from Twitter requesting temp token: %s' % resp['status']
   else:
-    request_token = dict(parse_qsl(content))
+    global REQ_TOK
+    REQ_TOK = dict(parse_qsl(content))
   
-  label = Tkinter.Text(root)
+  label = Tkinter.Text(root, height=4)
   label.insert(1.0, 'If your browser didn\'t open please visit this Twitter page and retrive the pincode to be entered in below:\n' )
   
   label.tag_config("a", foreground="blue", underline=1)
   label.tag_bind("a", "<Button-1>", click)
   
-  label.insert(2.0, '%s?oauth_token=%s' % (AUTHORIZATION_URL, request_token['oauth_token']), "a")
-  label.pack(side=Tkinter.LEFT)
+  label.insert(2.0, '%s?oauth_token=%s' % (AUTHORIZATION_URL, REQ_TOK['oauth_token']), "a")
+  label.pack(side=Tkinter.LEFT, fill=Tkinter.BOTH, expand=0)
   
   global LINK
-  LINK = '%s?oauth_token=%s' % (AUTHORIZATION_URL, request_token['oauth_token'])
+  LINK = '%s?oauth_token=%s' % (AUTHORIZATION_URL, REQ_TOK['oauth_token'])
   
-  entry = Tkinter.Entry(root)
-  entry.pack(side=Tkinter.BOTTOM)
+  global ENTRY
+  ENTRY = Tkinter.Entry(root)
+  ENTRY.pack(side=Tkinter.BOTTOM, fill=Tkinter.BOTH)
   
-  button = Tkinter.Button(root,text='Submit', command=getInfo)
-  button.pack(side=Tkinter.RIGHT)
+  button = Tkinter.Button(root,text='Submit', command=lambda: getInfo(oauth_consumer))
+  button.pack(side=Tkinter.RIGHT, fill=Tkinter.BOTH, expand=1)
   
   click()
   
