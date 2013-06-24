@@ -509,8 +509,8 @@ root.config(menu=menu)
 # END OF TK GUI STUFF
 #
 
-# tries to start the number thread to keep track of the
-#  character count
+# tries to start a thread that will keep the character count
+#  see the docs on the numbers function
 try:
         NUMBER_THREAD = upThread(1, "numbers", entry)
         NUMBER_THREAD.start()
@@ -529,9 +529,6 @@ except:
 if err != None:
         text.config(state=NORMAL)
         text.insert(1.0, "Something has gone wrong, please check the console")
-
-# tries to start a thread that will keep the character count
-#  see the docs on the numbers function
 
 ERR.append(getTime() + "- Main window started")
 
