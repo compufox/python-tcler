@@ -69,7 +69,7 @@ def getInfo(oauth_consumer, root):
 
 def writeInfo(key, secret):
   if system() == 'Windows':
-    open(os.path.expanduser('~\AppData\\tcler.txt'), 'w+').write(key +'\n'+ secret)
+    open(os.path.expanduser('~\AppData\\Roaming\\tcler.txt'), 'w+').write(key +'\n'+ secret)
   else:
     # assuming a Linux based system (including OS X)
     open(os.path.expanduser('~/.tcler'), 'w+').write(key + '\n' + secret)

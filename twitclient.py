@@ -414,7 +414,7 @@ err = None
 
 # OS checking code. (NOTE: Untested. Hopefully it works)
 if system() == "Windows":
-        if not path.exists(path.expanduser('~\AppData\\tcler.txt')):
+        if not path.exists(path.expanduser('~\AppData\\Roaming\\tcler.txt')):
                 get_access_token.startLogin()
 else:
         # this assumes that if you aren't on windows, then
@@ -425,7 +425,10 @@ else:
         
 # gets the user's creds and splits the key and secret up
 try:
-        red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
+        if system() != 'Windows':
+                red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
+        else:
+                red = open(path.expanduser('~\AppData\\Roaming\\tcler.txt'), 'r').read().split('\n')
 except:
         ERR.append(getTime() + "- Your credential file could not be opened. Did you login?")
         red = ['nope', 'nothing']
