@@ -16,10 +16,11 @@ class Target:
 
 twitclient = Target(
     description = "A simple Twitter client written in Python",
-    script = "twitclient.py")
+    script = "twitclient.py",
+    dest_base = "twitclient")
 
 setup(
-    options = {'py2exe': {'bundle_files': 1, 'compressed': True}},
+    options = {'py2exe': {'compressed': True}},
     zipfile = None,
     windows = [twitclient],
     )
