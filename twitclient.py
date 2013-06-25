@@ -84,7 +84,7 @@ STREAM_UPDATE = True
 
 # the id of the last tweet
 global LAST_ID
-LAST_ID = None
+LAST_ID = list()
 
 # Tkinter StringVar (used for updating the character count
 global TEXT
@@ -110,17 +110,28 @@ class HyperlinkManager:
                 self.text.tag_config("handle", foreground="red")
                 self.text.tag_bind("handle", "<Button-1>", lambda x: self._click("handle"))
                 
+                self.text.tag_config("inlineH", foreground="black")
+                self.text.tag_bind("inlineH", "<Button-1>", lambda x: self._click("inlineH"))
+                
+                self.text.tag_config("hash", foreground="DarkOliveGreen4")
+                self.text.tag_bind("hash", "<Button-1>", lambda x: self._click("hash"))
+                
                 self.reset()
+        
         def reset(self):
                 self.links = {}
+        
         def add(self, action, text, thisTag):
                 tag = thisTag + "-%d" % len(self.links)
                 self.links[tag] = (action,text)
                 return thisTag, tag
+        
         def _enter(self, event):
                 self.text.config(cursor="hand2")
+        
         def _leave(self, event):
                 self.text.config(cursor="")
+        
         def _click(self, thisTag, event = None):
                 for tag in self.text.tag_names(CURRENT):
                         if tag[:(len(thisTag) + 1)] == thisTag + "-":
@@ -206,7 +217,7 @@ class upThread (threading.Thread):
                         if self.tweet_id != 1:
                                 update(0, self.tweet_id)
                         else:
-                                update(1,LAST_ID)
+                                update(1,LAST_ID[0])
                 elif self.name == "numbers":
                         numbers(self.entry)
                 elif self.name == "post":
@@ -230,7 +241,6 @@ class upThread (threading.Thread):
 def updateDisplay(status):
         text.config(state=NORMAL)
         
- #       withNewLine = 0
         newStat = "< > "
         counter = 1.0
         
@@ -240,14 +250,18 @@ def updateDisplay(status):
                 try:
                         if s != status[0]:
                                 newStat = "\n<" + s.user.screen_name + "> "
-#                                withNewLine = 1
                         else:
                                 newStat = "<" + s.user.screen_name + "> "
                         length = len(newStat)/100
                         for word in reversed(s.text.split(' ')):
+#                                print word
                                 if word.split(':')[0] == 'http' or word.split(':')[0] == 'https':
                                         text.insert(counter, " ")
                                         text.insert(counter, word, hyper.add(clickLink, word, "hyper"))
+                                elif word.split('@')[0] == '':
+                                        text.insert(counter, word + " ", hyper.add(clickAuthor, word, "inlineH"))
+                                elif word.split('#')[0] == '':
+                                        text.insert(counter, word + " ", hyper.add(clickHash, word, "hash"))
                                 else:
                                         text.insert(counter, word + " ")
                         
@@ -258,6 +272,11 @@ def updateDisplay(status):
                                 CON.placeText(getTime() + "- A Tcl Character error occured, the offending tweet wasn't displayed")
                         else:
                                 print "A Tcl Character error occured, the offending tweet wasn't displayed"
+#                except:
+#                        if CON != None:
+#                                CON.placeText(getTime() + "- A character error occured.")
+#                        else:
+#                                print "A character error occured"
         
         text.config(state=DISABLED)
 
@@ -269,9 +288,16 @@ def oneShotUpdate():
         one_update = upThread(3, "update", 1)
         one_update.start()
 
-# 
+def clickHash(tag):
+        print tag
+
+# takes the clicked on user name and puts it in the 
+#  entry box, making it easier to reply to people
 def clickAuthor(handle):
-        handle = handle.split('<')[1].split('>')[0]
+        try:
+                handle = handle.split('<')[1].split('>')[0]
+        except:
+                handle = handle.split('@')[1].split(':')[0]
         entry.insert(INSERT, "@" + handle + " ")
 
 # supplies the callback to open links in the default
@@ -346,9 +372,9 @@ def update(shot, last_id):
                                 if len(STATUSES) != 0:
                                         last_id = STATUSES[0].id
                                 
-                                if len(STATUSES) > 0 and LAST_ID != last_id:
+                                if len(STATUSES) > 0 and LAST_ID[0] != last_id:
                                         global LAST_ID
-                                        LAST_ID = last_id
+                                        LAST_ID[0] = last_id
                                         updateDisplay(STATUSES)
                                 
                                 for i in range(18):
@@ -390,7 +416,7 @@ def update(shot, last_id):
                 
                         if len(STATUSES) > 0:
                                 global LAST_ID
-                                LAST_ID = STATUSES[0].id
+                                LAST_ID[0] = STATUSES[0].id
                                 updateDisplay(STATUSES)
                 except twitter.TwitterError:
                         if CON != None:
@@ -453,6 +479,9 @@ STATUSES = None
 #  or a twitter error
 try:
         STATUSES = api.GetHomeTimeline()
+        
+        global LAST_ID
+        LAST_ID.append(STATUSES[-1].id)
 except URLError:
         if err == None:
                 err = list()
@@ -469,7 +498,7 @@ except twitter.TwitterError:
 # tries to start a thread that just constantly runs the update function
 #  (see the update function docs for more info)
 try:
-        UPDATE_THREAD = upThread(0, "update", LAST_ID)
+        UPDATE_THREAD = upThread(0, "update", LAST_ID[0])
         
         UPDATE_THREAD.start()
 except:
@@ -495,7 +524,6 @@ scroll.pack(side=RIGHT, fill=Y,expand=0)
 text = Text(root, yscrollcommand=scroll.set)
 text.config(state=DISABLED, wrap=WORD)
 text.pack(fill=BOTH, expand=1)
-#text.tag_config("a", foreground="red")
 
 hyper = HyperlinkManager(text)
 
