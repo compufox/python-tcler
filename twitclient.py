@@ -412,7 +412,7 @@ ASS_SECRET = None
 #  always return True
 err = None
 
-# OS checking code. (NOTE: Untested. Hopefully it works)
+# OS checking code.
 if system() == "Windows":
         if not path.exists(path.expanduser('~\AppData\\Roaming\\tcler.txt')):
                 get_access_token.startLogin()
