@@ -414,7 +414,7 @@ err = None
 
 # OS checking code. (NOTE: Untested. Hopefully it works)
 if system() == "Windows":
-        if not path.exists(path.expanduser('%APPDATA%\tcler.txt')):
+        if not path.exists(path.expanduser('~\AppData\\tcler.txt')):
                 get_access_token.startLogin()
 else:
         # this assumes that if you aren't on windows, then
