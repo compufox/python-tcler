@@ -398,7 +398,7 @@ def post():
 # deletes the last tweet posted by the user
 def deleteTweet():
         if LAST_ID['self'] != 0:
-                api.Delete(LAST_ID['self'])
+                api.DestroyStatus(LAST_ID['self'])
                 if CON is not None:
                         CON.placeText(getTime()
                                       + "- Last tweet deleted")
@@ -431,9 +431,9 @@ def getTime():
         else:
                 secs = str(localtime().tm_sec) + " "
     
-        return str(localtime().tm_hour)
-        + ":" + str(localtime().tm_min)
-        + ":" + secs
+        return str(str(localtime().tm_hour)
+                   + ":" + str(localtime().tm_min)
+                   + ":" + secs)
 
 
 # quits the threads and destroys the widgets
