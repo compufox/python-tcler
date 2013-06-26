@@ -388,18 +388,28 @@ def post():
         toPost = entry.get()
         entry.delete(0, END)
         
-        api.PostUpdate(toPost)
+        global LAST_ID
+        LAST_ID[1] = api.PostUpdate(toPost).id
+        
 
 
 # deletes the last tweet posted by the user
 def deleteTweet():
-        api.Delete(LAST_ID[1])
-        if CON is not None:
-                CON.placeText(getTime()
-                              + "- Last tweet deleted")
+        if LAST_ID[1] is not None:
+                api.Delete(LAST_ID[1])
+                if CON is not None:
+                        CON.placeText(getTime()
+                                      + "- Last tweet deleted")
+                else:
+                        ERR.append(getTime()
+                                   + "- Last tweet deleted")
         else:
-                ERR.append(getTime()
-                           + "- Last tweet deleted")
+                if CON is not None:
+                        CON.placeText(getTime()
+                                      + "- Last tweet was not deleted")
+                else:
+                        ERR.append(getTime()
+                                   + "- Last tweet was not deleted")
 
 
 # keeps track of the chacter count and updates the GUI label
