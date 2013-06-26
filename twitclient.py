@@ -464,6 +464,10 @@ def postThreader():
 #   button.
 def update(shot, last_id):
         if shot != 1:
+                for i in range(18):
+                        sleep(5)
+                        if not STREAM_UPDATE:
+                                break
                 while STREAM_UPDATE:
                         STATUSES = list()
                         try:
