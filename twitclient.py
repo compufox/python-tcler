@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 #
 # Copyright (c) 2013, theZacAttacks
 #
@@ -109,7 +110,9 @@ STREAM_UPDATE = True
 
 # the id of the last tweet
 global LAST_ID
-LAST_ID = list()
+LAST_ID = {'tweet': 0,
+           'self': 0,
+           'mention': 0}
 
 # Tkinter StringVar (used for updating the character count
 global TEXT
@@ -259,7 +262,7 @@ class upThread (threading.Thread):
                         if self.tweet_id != 1:
                                 update(0, self.tweet_id)
                         else:
-                                update(1, LAST_ID[0])
+                                update(1, LAST_ID['tweet'])
                 elif self.name == "numbers":
                         numbers(self.entry)
                 elif self.name == "post":
@@ -389,13 +392,13 @@ def post():
         entry.delete(0, END)
         
         global LAST_ID
-        LAST_ID[1] = api.PostUpdate(toPost).id
+        LAST_ID['self'] = api.PostUpdate(toPost).id
 
 
 # deletes the last tweet posted by the user
 def deleteTweet():
-        if LAST_ID[1] is not None:
-                api.Delete(LAST_ID[1])
+        if LAST_ID['self'] != 0:
+                api.Delete(LAST_ID['self'])
                 if CON is not None:
                         CON.placeText(getTime()
                                       + "- Last tweet deleted")
@@ -470,9 +473,12 @@ def update(shot, last_id):
                                 if len(STATUSES) != 0:
                                         last_id = STATUSES[0].id
                                 
-                                if len(STATUSES) > 0 and LAST_ID[0] != last_id:
+                                if (
+                                        len(STATUSES) > 0 and
+                                        LAST_ID['tweet'] != last_id
+                                ):
                                         global LAST_ID
-                                        LAST_ID[0] = last_id
+                                        LAST_ID['tweet'] = last_id
                                         updateDisplay(STATUSES)
                                 
                                 for i in range(18):
@@ -516,7 +522,7 @@ def update(shot, last_id):
                 
                         if len(STATUSES) > 0:
                                 global LAST_ID
-                                LAST_ID[0] = STATUSES[0].id
+                                LAST_ID['tweet'] = STATUSES[0].id
                                 updateDisplay(STATUSES)
                 except twitter.TwitterError:
                         if CON is not None:
@@ -581,10 +587,11 @@ STATUSES = None
 # try and get the statuses, while catching either a network error
 #  or a twitter error
 try:
-        STATUSES = api.GetHomeTimeline()
+        oneShotUpdate()
+#        STATUSES = api.GetHomeTimeline()
         
-        global LAST_ID
-        LAST_ID.append(STATUSES[-1].id)
+#        global LAST_ID
+#        LAST_ID['tweet'] = STATUSES[-1].id
 except URLError:
         if err is not None:
                 err = list()
@@ -599,7 +606,7 @@ except twitter.TwitterError:
 # tries to start a thread that just constantly runs the update function
 #  (see the update function docs for more info)
 try:
-        UPDATE_THREAD = upThread(0, "update", LAST_ID[0])
+        UPDATE_THREAD = upThread(0, "update", LAST_ID['tweet'])
         
         UPDATE_THREAD.start()
 except:
@@ -643,6 +650,7 @@ menu.add_command(label="Console", command=showConsole)
 menu.add_command(label="Delete last tweet", command=deleteTweet)
 menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 root.config(menu=menu)
+
 #
 # END OF TK GUI STUFF
 #
