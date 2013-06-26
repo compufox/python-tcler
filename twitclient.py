@@ -355,7 +355,7 @@ def oneShotUpdate():
 
 
 def clickHash(tag):
-        print tag
+        print(tag)
 
 
 # takes the clicked on user name and puts it in the
