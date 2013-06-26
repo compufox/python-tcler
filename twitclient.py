@@ -390,7 +390,6 @@ def post():
         
         global LAST_ID
         LAST_ID[1] = api.PostUpdate(toPost).id
-        
 
 
 # deletes the last tweet posted by the user
@@ -641,8 +640,8 @@ scroll.config(command=text.yview)
 menu = Menu(root)
 menu.add_command(label="Update", command=oneShotUpdate)
 menu.add_command(label="Console", command=showConsole)
-menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 menu.add_command(label="Delete last tweet", command=deleteTweet)
+menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 root.config(menu=menu)
 #
 # END OF TK GUI STUFF
