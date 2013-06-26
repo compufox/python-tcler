@@ -391,6 +391,17 @@ def post():
         api.PostUpdate(toPost)
 
 
+# deletes the last tweet posted by the user
+def deleteTweet():
+        api.Delete(LAST_ID[1])
+        if CON is not None:
+                CON.placeText(getTime()
+                              + "- Last tweet deleted")
+        else:
+                ERR.append(getTime()
+                           + "- Last tweet deleted")
+
+
 # keeps track of the chacter count and updates the GUI label
 def numbers(entry):
         while STREAM_UPDATE:
@@ -621,6 +632,7 @@ menu = Menu(root)
 menu.add_command(label="Update", command=oneShotUpdate)
 menu.add_command(label="Console", command=showConsole)
 menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
+menu.add_command(label="Delete last tweet", command=deleteTweet)
 root.config(menu=menu)
 #
 # END OF TK GUI STUFF
