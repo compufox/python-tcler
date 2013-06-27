@@ -325,7 +325,6 @@ def updateDisplay(status):
                                 newStat = "<" + s.user.screen_name + "> "
                         
                         for word in reversed(s.text.split(' ')):
-#                                print word
                                 if (
                                         word.split(':')[0] == 'http' or
                                         word.split(':')[0] == 'https'
@@ -372,7 +371,7 @@ def updateDisplay(status):
 # starts a thread that runs a one-shot update on statuses.
 #  this method, like the postThread method, is mainly
 #  so the GUI doesn't freeze up while the method runs
-def oneShotUpdate():
+def oneShotUpdate(event=None):
         one_update = upThread(3, "update", 1)
         one_update.start()
 
@@ -398,7 +397,7 @@ def clickLink(link):
 
 
 # shows the console toplevel widget
-def showConsole():
+def showConsole(event=None):
         if CON is not None:
                 CON.placeText((getTime() + ERRORS_SIGS['console'], 'ERR'))
         else:
@@ -416,7 +415,7 @@ def post():
 
 
 # deletes the last tweet posted by the user
-def deleteTweet():
+def deleteTweet(event=None):
         if LAST_ID['self'] != 0:
                 api.DestroyStatus(LAST_ID['self'])
                 if CON is not None:
@@ -485,7 +484,7 @@ def quit(thread):
 
 # starts a thread to run the post function. (Made this just so the GUI
 #   doesn't unattractivly freeze up
-def postThreader():
+def postThreader(event=None):
         post_thread = upThread(2, "post", 0)
         post_thread.start()
 
@@ -649,6 +648,10 @@ except:
 root = Tk()
 root.wm_title("Python Tcler - Twitter Client")
 root.wm_minsize(width=200, height=400)
+root.bind("<Return>", postThreader)
+root.bind("<Control-u>", oneShotUpdate)
+root.bind("<Control-c>", showConsole)
+root.bind("<Control-d>", deleteTweet)
 
 global TEXT
 TEXT = StringVar(root)
@@ -668,6 +671,7 @@ post_button.pack(side=RIGHT, fill=BOTH, expand=0)
 Label(root, textvariable=TEXT).pack(side=RIGHT)
 
 entry = Entry(root)
+entry.focus()
 entry.pack(fill=X, expand=1, side=RIGHT)
 
 scroll.config(command=text.yview)
