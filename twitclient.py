@@ -662,7 +662,7 @@ root.wm_minsize(width=200, height=400)
 root.bind("<Return>", postThreader)
 root.bind("<Control-u>", oneShotUpdate)
 root.bind("<Control-c>", showConsole)
-root.bind("<Control-d>", deleteTweet)
+root.bind("<Control-d>", delThreader)
 
 global TEXT
 TEXT = StringVar(root)
