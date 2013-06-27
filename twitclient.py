@@ -282,6 +282,8 @@ class upThread (threading.Thread):
                         numbers(self.entry)
                 elif self.name == "post":
                         post()
+                elif self.name == "del":
+                        deleteTweet()
                 if CON is not None and not self.threadID < 2:
                         CON.placeText(getTime()
                                       + "- "
@@ -483,10 +485,17 @@ def quit(thread):
 
 
 # starts a thread to run the post function. (Made this just so the GUI
-#   doesn't unattractivly freeze up
+#   doesn't unattractivly freeze up)
 def postThreader(event=None):
         post_thread = upThread(2, "post", 0)
         post_thread.start()
+
+
+# starts a thread to run the delete tweet function. this is just here 
+#  to keep the GUI from freezing up
+def delThreader(event=None):
+        del_thread = upThread(4, "del", 0)
+        del_thread.start()
 
 
 # gets the newest updates, while trying to stay within the Twitter's API
@@ -679,7 +688,7 @@ scroll.config(command=text.yview)
 menu = Menu(root)
 menu.add_command(label="Update", command=oneShotUpdate)
 menu.add_command(label="Console", command=showConsole)
-menu.add_command(label="Delete last tweet", command=deleteTweet)
+menu.add_command(label="Delete last tweet", command=delThreader)
 menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 root.config(menu=menu)
 
