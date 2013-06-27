@@ -349,6 +349,8 @@ def updateDisplay(status):
                                                     hyper.add(clickHash,
                                                               word,
                                                               "hash"))
+                                elif word == "&amp;":
+                                        text.insert(counter, "& ")
                                 else:
                                         text.insert(counter, word + " ")
                         
