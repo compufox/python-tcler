@@ -349,17 +349,17 @@ def updateDisplay(status):
                                                     hyper.add(clickHash,
                                                               word,
                                                               "hash"))
-                                elif word == "&amp;":
+                                elif word.find("&amp;") != -1:
                                         text.insert(counter,
                                                     word.replace("&amp;",
                                                                  "&")
                                                     + " ")
-                                elif word == "&lt;":
+                                elif word.find("&lt;") != -1:
                                         text.insert(counter,
                                                     word.replace("&lt;",
                                                                  "<")
                                                     + " ")
-                                elif word.find("&gt;") != 0:
+                                elif word.find("&gt;") != -1:
                                         text.insert(counter,
                                                     word.replace("&gt;",
                                                                  ">")
