@@ -15,6 +15,8 @@ Based on the [python-twitter](https://github.com/bear/python-twitter)
 
 - Clicking on links open them in your default browser (http and https)
 
+- Keyboard shortcuts to easily access GUI buttons without using a mouse
+
 # To come
 
 - Search for hashtag by clicking hashtag
