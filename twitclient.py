@@ -198,9 +198,13 @@ class conDialog(Toplevel):
                 self.close.pack(fill=X, expand=0)
                 
                 self.logger.tag_config('backlog', foreground="grey")
+                self.logger.tag_config('ERR', foreground="IndianRed1")
                 
-                for e in ERR:
-                        self.logger.insert(INSERT, e + "\n", 'backlog')
+                for e in range(len(ERR)):
+                        if len(ERR[e][1]) > 1:
+                                self.logger.insert(INSERT, ERR[e][0] + "\n", ERR[e][1])
+                        else:
+                                self.logger.insert(INSERT, ERR[e] + "\n", 'backlog')
                 self.logger.config(state=DISABLED)
 
         # destroys this Toplevel widget and sets the CON variable to None
@@ -214,7 +218,12 @@ class conDialog(Toplevel):
         def placeText(self, message):
                 self.logger.config(state=NORMAL)
                 ERR.append(message)
-                self.logger.insert(INSERT, message + "\n")
+                
+                if len(message[1]) > 1:
+                        self.logger.insert(INSERT, message[0] + "\n", message[1])
+                else:
+                        self.logger.insert(INSERT, message + "\n")
+                
                 self.logger.config(state=DISABLED)
 
 
@@ -342,8 +351,9 @@ def updateDisplay(status):
                 
                 except TclError:
                         if CON is not None:
-                                CON.placeText(getTime() + ERRORS_SIGS['tcl'])
+                                CON.placeText((getTime() + ERRORS_SIGS['tcl'], 'ERR'))
                         else:
+                                ERR.append((getTime() + ERRORS_SIGS['tcl'], 'ERR'))
                                 print(ERRORS_SIGS['tcl'])
         
         text.config(state=DISABLED)
@@ -380,7 +390,7 @@ def clickLink(link):
 # shows the console toplevel widget
 def showConsole():
         if CON is not None:
-                CON.placeText(getTime() + ERRORS_SIGS['console'])
+                CON.placeText((getTime() + ERRORS_SIGS['console'], 'ERR'))
         else:
                 global CON
                 CON = conDialog(root, "Console")
@@ -407,11 +417,11 @@ def deleteTweet():
                                    + "- Last tweet deleted")
         else:
                 if CON is not None:
-                        CON.placeText(getTime()
-                                      + "- Last tweet was not deleted")
+                        CON.placeText((getTime()
+                                       + "- Last tweet was not deleted", 'ERR'))
                 else:
-                        ERR.append(getTime()
-                                   + "- Last tweet was not deleted")
+                        ERR.append((getTime()
+                                   + "- Last tweet was not deleted", 'ERR'))
 
 
 # keeps track of the chacter count and updates the GUI label
@@ -426,13 +436,25 @@ def numbers(entry):
 #  current local time in the correct format
 def getTime():
         secs = None
+        minut = None
+        hour = None
         if localtime().tm_sec < 10:
                 secs = "0" + str(localtime().tm_sec) + " "
         else:
                 secs = str(localtime().tm_sec) + " "
-    
-        return str(str(localtime().tm_hour)
-                   + ":" + str(localtime().tm_min)
+                
+        if localtime().tm_min < 10:
+                minut = "0" + str(localtime().tm_min)
+        else:
+                minut = str(localtime().tm_min)
+        
+        if localtime().tm_hour < 10:
+                hour = "0" + str(localtime().tm_hour)
+        else:
+                hour = str(localtime().tm_hour)
+        
+        return str(hour
+                   + ":" + minut
                    + ":" + secs)
 
 
@@ -494,12 +516,12 @@ def update(shot, last_id):
                                         break
                         except twitter.TwitterError:
                                 if CON is not None:
-                                        CON.placeText(getTime()
-                                                      + ERRORS_SIGS['twitter'])
+                                        CON.placeText((getTime()
+                                                      + ERRORS_SIGS['twitter'], 'ERR'))
                                 else:
                                         print(ERRORS_SIGS['twitter'])
-                                        ERR.append(getTime()
-                                                   + ERRORS_SIGS['twitter'])
+                                        ERR.append((getTime()
+                                                    + ERRORS_SIGS['twitter'], 'ERR'))
                                 for i in range(18):
                                         sleep(5)
                                         if not STREAM_UPDATE:
@@ -509,12 +531,12 @@ def update(shot, last_id):
                                         break
                         except URLError:
                                 if CON is not None:
-                                        CON.placeText(getTime()
-                                                      + ERRORS_SIGS['network'])
+                                        CON.placeText((getTime()
+                                                       + ERRORS_SIGS['network'], 'ERR'))
                                 else:
                                         print(ERRORS_SIGS['network'])
-                                        ERR.append(getTime()
-                                                   + ERRORS_SIGS['network'])
+                                        ERR.append((getTime()
+                                                   + ERRORS_SIGS['network'], 'ERR'))
                                 for i in range(18):
                                         sleep(5)
                                         if not STREAM_UPDATE:
@@ -534,20 +556,20 @@ def update(shot, last_id):
                                 updateDisplay(STATUSES)
                 except twitter.TwitterError:
                         if CON is not None:
-                                CON.placeText(getTime()
-                                              + ERRORS_SIGS['twitter'])
+                                CON.placeText((getTime()
+                                              + ERRORS_SIGS['twitter'], 'ERR'))
                         else:
                                 print(ERRORS_SIGS['twitter'])
-                                ERR.append(getTime()
-                                           + ERRORS_SIGS['twitter'])
+                                ERR.append((getTime()
+                                            + ERRORS_SIGS['twitter'], 'ERR'))
                 except URLError:
                         if CON is not None:
-                                CON.placeText(getTime()
-                                              + ERRORS_SIGS['network'])
+                                CON.placeText((getTime()
+                                              + ERRORS_SIGS['network'], 'ERR'))
                         else:
                                 print(ERRORS_SIGS['network'])
-                                ERR.append(getTime()
-                                           + ERRORS_SIGS['network'])
+                                ERR.append((getTime()
+                                           + ERRORS_SIGS['network'], 'ERR'))
 
 # creates the access_token secret and key variables
 #  to use to get the api reference
@@ -573,7 +595,7 @@ try:
                 red = open(path.expanduser('~\AppData\\Roaming\\tcler.txt'),
                            'r').read().split('\n')
 except:
-        ERR.append(getTime() + ERRORS_SIGS['login'])
+        ERR.append((getTime() + ERRORS_SIGS['login'], 'ERR'))
         red = ['nope', 'nothing']
 
 ASS_KEY = red[0]
@@ -593,9 +615,9 @@ STATUSES = None
 try:
         oneShotUpdate()
 except URLError:
-        ERR.append(getTime() + ERRORS_SIGS['network'])
+        ERR.append((getTime() + ERRORS_SIGS['network'], 'ERR'))
 except twitter.TwitterError:
-        ERR.append(getTime() + ERRORS_SIGS['twitter'])
+        ERR.append((getTime() + ERRORS_SIGS['twitter'], 'ERR'))
 
 # tries to start a thread that just constantly runs the update function
 #  (see the update function docs for more info)
@@ -604,7 +626,7 @@ try:
         
         UPDATE_THREAD.start()
 except:
-        ERR.append(getTime() + ERRORS_SIGS['update'])
+        ERR.append((getTime() + ERRORS_SIGS['update'], 'ERR'))
 
 #
 # STARTS SETTING UP TK GUI STUFF
@@ -652,7 +674,7 @@ try:
         NUMBER_THREAD = upThread(1, "numbers", entry)
         NUMBER_THREAD.start()
 except:
-        ERR.append(getTime() + ERRORS_SIGS['numbers'])
+        ERR.append((getTime() + ERRORS_SIGS['numbers'], 'ERR'))
 
 # if the local variable err is still None, then no errors
 #  occured since start up, otherwise a message is printed
