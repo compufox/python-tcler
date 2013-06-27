@@ -97,7 +97,7 @@ ERRORS_SIGS = {'twitter': "- Your timeline could not be retrieved at this "
                'numbers':  "- Starting the thread for numbers failed."
                + " Character counting will not be operational",
                'login': "- Your credential file could not be opened." +
-               "Did you login?",
+               " Did you login?",
                'generic': "Something has gone wrong, please check the console"}
 
 # log of errors
@@ -547,11 +547,6 @@ def update(shot, last_id):
 ASS_KEY = None
 ASS_SECRET = None
 
-# sets the local err variable to None meaning that no errors have happened yet
-#  this is used because ERR is already set to not be None, so ERR != None will
-#  always return True
-err = None
-
 # OS checking code.
 if system() == "Windows":
         if not path.exists(path.expanduser('~\AppData\\Roaming\\tcler.txt')):
@@ -573,8 +568,6 @@ try:
 except:
         ERR.append(getTime() + ERRORS_SIGS['login'])
         red = ['nope', 'nothing']
-        if err is not None:
-                err = list()
 
 ASS_KEY = red[0]
 ASS_SECRET = red[1]
@@ -592,19 +585,9 @@ STATUSES = None
 #  or a twitter error
 try:
         oneShotUpdate()
-#        STATUSES = api.GetHomeTimeline()
-        
-#        global LAST_ID
-#        LAST_ID['tweet'] = STATUSES[-1].id
 except URLError:
-        if err is not None:
-                err = list()
-        
         ERR.append(getTime() + ERRORS_SIGS['network'])
 except twitter.TwitterError:
-        if err is not None:
-                err = list()
-        
         ERR.append(getTime() + ERRORS_SIGS['twitter'])
 
 # tries to start a thread that just constantly runs the update function
@@ -614,9 +597,6 @@ try:
         
         UPDATE_THREAD.start()
 except:
-        if err is not None:
-                err = list()
-        
         ERR.append(getTime() + ERRORS_SIGS['update'])
 
 #
@@ -665,18 +645,14 @@ try:
         NUMBER_THREAD = upThread(1, "numbers", entry)
         NUMBER_THREAD.start()
 except:
-        if err is not None:
-                err = list()
-        
         ERR.append(getTime() + ERRORS_SIGS['numbers'])
-        err.append(ERR[len(ERR)-1])
 
 # if the local variable err is still None, then no errors
 #  occured since start up, otherwise a message is printed
 #  saying to check the log (which, when opened will be
 #  populated with all of the error messages, or otherwise,
 #  that will hopefully help the user find the problem)
-if err is not None:
+if len(ERR) > 4:
         text.config(state=NORMAL)
         text.insert(1.0, ERRORS_SIGS['generic'])
 
