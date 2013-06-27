@@ -89,7 +89,7 @@ ERRORS_SIGS = {'twitter': "- Your timeline could not be retrieved at this "
                + "time.\nPlease try again later.",
                'tcl': "- A Tcl Character error occured, "
                + "the offending tweet wasn't displayed",
-               'network':  "- There was a problem opening the network "
+               'net':  "- There was a problem opening the network "
                + "connection. Please ensure that your computer is online.",
                'console': "- Console already shown",
                'update': "- Streaming update thread failed to start. Updating"
@@ -202,9 +202,13 @@ class conDialog(Toplevel):
                 
                 for e in range(len(ERR)):
                         if len(ERR[e][1]) > 1:
-                                self.logger.insert(INSERT, ERR[e][0] + "\n", ERR[e][1])
+                                self.logger.insert(INSERT,
+                                                   str(ERR[e][0] + "\n"),
+                                                   ERR[e][1])
                         else:
-                                self.logger.insert(INSERT, ERR[e] + "\n", 'backlog')
+                                self.logger.insert(INSERT,
+                                                   str(ERR[e] + '\n'),
+                                                   'backlog')
                 self.logger.config(state=DISABLED)
 
         # destroys this Toplevel widget and sets the CON variable to None
@@ -220,7 +224,9 @@ class conDialog(Toplevel):
                 ERR.append(message)
                 
                 if len(message[1]) > 1:
-                        self.logger.insert(INSERT, message[0] + "\n", message[1])
+                        self.logger.insert(INSERT,
+                                           str(message[0] + "\n"),
+                                           message[1])
                 else:
                         self.logger.insert(INSERT, message + "\n")
                 
@@ -351,9 +357,13 @@ def updateDisplay(status):
                 
                 except TclError:
                         if CON is not None:
-                                CON.placeText((getTime() + ERRORS_SIGS['tcl'], 'ERR'))
+                                CON.placeText((getTime()
+                                               + ERRORS_SIGS['tcl'],
+                                               'ERR'))
                         else:
-                                ERR.append((getTime() + ERRORS_SIGS['tcl'], 'ERR'))
+                                ERR.append((getTime()
+                                            + ERRORS_SIGS['tcl'],
+                                            'ERR'))
                                 print(ERRORS_SIGS['tcl'])
         
         text.config(state=DISABLED)
@@ -418,7 +428,8 @@ def deleteTweet():
         else:
                 if CON is not None:
                         CON.placeText((getTime()
-                                       + "- Last tweet was not deleted", 'ERR'))
+                                       + "- Last tweet was not deleted",
+                                       'ERR'))
                 else:
                         ERR.append((getTime()
                                    + "- Last tweet was not deleted", 'ERR'))
@@ -517,11 +528,13 @@ def update(shot, last_id):
                         except twitter.TwitterError:
                                 if CON is not None:
                                         CON.placeText((getTime()
-                                                      + ERRORS_SIGS['twitter'], 'ERR'))
+                                                      + ERRORS_SIGS['twitter'],
+                                                       'ERR'))
                                 else:
                                         print(ERRORS_SIGS['twitter'])
                                         ERR.append((getTime()
-                                                    + ERRORS_SIGS['twitter'], 'ERR'))
+                                                    + ERRORS_SIGS['twitter'],
+                                                    'ERR'))
                                 for i in range(18):
                                         sleep(5)
                                         if not STREAM_UPDATE:
@@ -532,11 +545,13 @@ def update(shot, last_id):
                         except URLError:
                                 if CON is not None:
                                         CON.placeText((getTime()
-                                                       + ERRORS_SIGS['network'], 'ERR'))
+                                                       + ERRORS_SIGS['net'],
+                                                       'ERR'))
                                 else:
-                                        print(ERRORS_SIGS['network'])
+                                        print(ERRORS_SIGS['net'])
                                         ERR.append((getTime()
-                                                   + ERRORS_SIGS['network'], 'ERR'))
+                                                    + ERRORS_SIGS['net'],
+                                                    'ERR'))
                                 for i in range(18):
                                         sleep(5)
                                         if not STREAM_UPDATE:
@@ -565,11 +580,11 @@ def update(shot, last_id):
                 except URLError:
                         if CON is not None:
                                 CON.placeText((getTime()
-                                              + ERRORS_SIGS['network'], 'ERR'))
+                                              + ERRORS_SIGS['net'], 'ERR'))
                         else:
-                                print(ERRORS_SIGS['network'])
+                                print(ERRORS_SIGS['net'])
                                 ERR.append((getTime()
-                                           + ERRORS_SIGS['network'], 'ERR'))
+                                           + ERRORS_SIGS['net'], 'ERR'))
 
 # creates the access_token secret and key variables
 #  to use to get the api reference
@@ -615,7 +630,7 @@ STATUSES = None
 try:
         oneShotUpdate()
 except URLError:
-        ERR.append((getTime() + ERRORS_SIGS['network'], 'ERR'))
+        ERR.append((getTime() + ERRORS_SIGS['net'], 'ERR'))
 except twitter.TwitterError:
         ERR.append((getTime() + ERRORS_SIGS['twitter'], 'ERR'))
 
