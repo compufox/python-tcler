@@ -498,6 +498,8 @@ def update(shot, last_id):
                                                       + ERRORS_SIGS['twitter'])
                                 else:
                                         print(ERRORS_SIGS['twitter'])
+                                        ERR.append(getTime()
+                                                   + ERRORS_SIGS['twitter'])
                                 for i in range(18):
                                         sleep(5)
                                         if not STREAM_UPDATE:
@@ -511,6 +513,8 @@ def update(shot, last_id):
                                                       + ERRORS_SIGS['network'])
                                 else:
                                         print(ERRORS_SIGS['network'])
+                                        ERR.append(getTime()
+                                                   + ERRORS_SIGS['network'])
                                 for i in range(18):
                                         sleep(5)
                                         if not STREAM_UPDATE:
@@ -531,16 +535,19 @@ def update(shot, last_id):
                 except twitter.TwitterError:
                         if CON is not None:
                                 CON.placeText(getTime()
-                                              + ERRORS_SIGS['network'])
+                                              + ERRORS_SIGS['twitter'])
                         else:
-                                print("There was a Twitter "
-                                      + "problem getting the tweet")
+                                print(ERRORS_SIGS['twitter'])
+                                ERR.append(getTime()
+                                           + ERRORS_SIGS['twitter'])
                 except URLError:
                         if CON is not None:
                                 CON.placeText(getTime()
                                               + ERRORS_SIGS['network'])
                         else:
                                 print(ERRORS_SIGS['network'])
+                                ERR.append(getTime()
+                                           + ERRORS_SIGS['network'])
 
 # creates the access_token secret and key variables
 #  to use to get the api reference
