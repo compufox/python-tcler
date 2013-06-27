@@ -350,7 +350,20 @@ def updateDisplay(status):
                                                               word,
                                                               "hash"))
                                 elif word == "&amp;":
-                                        text.insert(counter, "& ")
+                                        text.insert(counter,
+                                                    word.replace("&amp;",
+                                                                 "&")
+                                                    + " ")
+                                elif word == "&lt;":
+                                        text.insert(counter,
+                                                    word.replace("&lt;",
+                                                                 "<")
+                                                    + " ")
+                                elif word.find("&gt;") != 0:
+                                        text.insert(counter,
+                                                    word.replace("&gt;",
+                                                                 ">")
+                                                    + " ")
                                 else:
                                         text.insert(counter, word + " ")
                         
@@ -493,7 +506,7 @@ def postThreader(event=None):
         post_thread.start()
 
 
-# starts a thread to run the delete tweet function. this is just here 
+# starts a thread to run the delete tweet function. this is just here
 #  to keep the GUI from freezing up
 def delThreader(event=None):
         del_thread = upThread(4, "del", 0)
