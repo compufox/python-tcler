@@ -73,16 +73,18 @@ try:
         from Tkinter import (Scrollbar, Text, Entry, Tk, Button, Toplevel,
                              Menu, StringVar, Label, TclError, BOTH,
                              RIGHT, X, Y, NORMAL, DISABLED, WORD, INSERT,
-                             END, CURRENT)
+                             END, CURRENT, TOP, LEFT)
 except ImportError:
         from tkinter import (Scrollbar, Text, Entry, Tk, Button, Toplevel,
                              Menu, StringVar, Label, TclError, BOTH,
                              RIGHT, X, Y, NORMAL, DISABLED, WORD, INSERT,
-                             END, CURRENT)
+                             END, CURRENT, TOP, LEFT)
 
 #
 # GLOBAL VARIABLE DECLARATION
 #
+global SEARCH
+SEARCH = None
 
 global ERRORS_SIGS
 ERRORS_SIGS = {'twitter': "- Your timeline could not be retrieved at this "
@@ -98,7 +100,8 @@ ERRORS_SIGS = {'twitter': "- Your timeline could not be retrieved at this "
                + " Character counting will not be operational",
                'login': "- Your credential file could not be opened." +
                " Did you login?",
-               'generic': "Something has gone wrong, please check the console"}
+               'generic': "Something has gone wrong, please check the console",
+               'search': '- Search window already opened'}
 
 # log of errors
 global ERR
@@ -177,7 +180,28 @@ class searchDialog(Toplevel):
                 self.top.wm_title(title)
                 
                 self.searchy = Text(self.top)
+                self.searchy.config(wrap=WORD)
+                self.search_entry = Entry(self.top)
+                self.close = Button(self.top, text="Close", command=self.close)
+                self.search_button = Button(self.top, text="Search")
+                self.scrollbar = Scrollbar(self.top)
                 
+                self.scrollbar.pack(side=RIGHT, fill=Y, expand=0)
+                self.searchy.config(yscrollcommand=self.scrollbar.set, state=DISABLED)
+                self.searchy.pack(side=TOP, fill=BOTH, expand=1)
+                self.search_entry.pack(side=LEFT, fill=X, expand=1)
+                self.close.pack(side=RIGHT, fill=BOTH, expand=0)
+                self.search_button.pack(side=RIGHT, fill=BOTH, expand=0)
+                
+                self.linker = HyperlinkManager(self.searchy)
+                
+        def close(self):
+                global SEARCH
+                SEARCH = None
+                self.top.destroy()
+        
+        def putText(self, text):
+                updateDisplay(text, self.searchy, self.linker)
 
 # a small class that allows for a Toplevel widget to
 #  become active with the console log
@@ -212,7 +236,7 @@ class conDialog(Toplevel):
                 self.logger.config(state=DISABLED)
 
         # destroys this Toplevel widget and sets the CON variable to None
-        def closeThisWindow(self):
+        def close(self):
                 self.top.destroy()
                 global CON
                 CON = None
@@ -246,6 +270,8 @@ class upThread (threading.Thread):
                 elif name == "numbers":
                         self.entry = args
                 elif name == "post":
+                        self.tweet_id = args
+                elif name == "hash":
                         self.tweet_id = args
                 
         # starts the threads while making a note in the backlog/console
@@ -284,6 +310,8 @@ class upThread (threading.Thread):
                         post()
                 elif self.name == "del":
                         deleteTweet()
+                elif self.name == "hash":
+                        clickHash(self.tweet_id)
                 if CON is not None and not self.threadID < 2:
                         CON.placeText(getTime()
                                       + "- "
@@ -311,13 +339,13 @@ class upThread (threading.Thread):
 #
 #  DO NOT CHANGE, unless you have a good reason
 #   (which I always have a good reason)
-def updateDisplay(status):
-        text.config(state=NORMAL)
+def updateDisplay(status, tfield, linkman):
+        tfield.config(state=NORMAL)
         
         newStat = "< > "
         counter = 1.0
         
-        text.insert(counter, "\n")
+        tfield.insert(counter, "\n")
         
         for s in reversed(status):
                 try:
@@ -331,45 +359,45 @@ def updateDisplay(status):
                                         word.split(':')[0] == 'http' or
                                         word.split(':')[0] == 'https'
                                 ):
-                                        text.insert(counter, " ")
-                                        text.insert(counter,
+                                        tfield.insert(counter, " ")
+                                        tfield.insert(counter,
                                                     word,
-                                                    hyper.add(clickLink,
+                                                    linkman.add(clickLink,
                                                               word,
                                                               "hyper"))
                                 elif word.split('@')[0] == '':
-                                        text.insert(counter,
+                                        tfield.insert(counter,
                                                     word + " ",
-                                                    hyper.add(clickAuthor,
+                                                    linkman.add(clickAuthor,
                                                               word,
                                                               "inlineH"))
                                 elif word.split('#')[0] == '':
-                                        text.insert(counter,
+                                        tfield.insert(counter,
                                                     word + " ",
-                                                    hyper.add(clickHash,
+                                                    linkman.add(hashThreader,
                                                               word,
                                                               "hash"))
                                 elif word.find("&amp;") != -1:
-                                        text.insert(counter,
+                                        tfield.insert(counter,
                                                     word.replace("&amp;",
                                                                  "&")
                                                     + " ")
                                 elif word.find("&lt;") != -1:
-                                        text.insert(counter,
+                                        tfield.insert(counter,
                                                     word.replace("&lt;",
                                                                  "<")
                                                     + " ")
                                 elif word.find("&gt;") != -1:
-                                        text.insert(counter,
+                                        tfield.insert(counter,
                                                     word.replace("&gt;",
                                                                  ">")
                                                     + " ")
                                 else:
-                                        text.insert(counter, word + " ")
+                                        tfield.insert(counter, word + " ")
                         
-                        text.insert(counter,
+                        tfield.insert(counter,
                                     newStat,
-                                    hyper.add(clickAuthor, newStat, "handle"))
+                                    linkman.add(clickAuthor, newStat, "handle"))
                 
                 except TclError:
                         if CON is not None:
@@ -382,7 +410,7 @@ def updateDisplay(status):
                                             'ERR'))
                                 print(ERRORS_SIGS['tcl'])
         
-        text.config(state=DISABLED)
+        tfield.config(state=DISABLED)
 
 
 # starts a thread that runs a one-shot update on statuses.
@@ -393,8 +421,25 @@ def oneShotUpdate(event=None):
         one_update.start()
 
 
+# starts a thread to make the GetSearch method run in the
+#  background
+def hashThreader(tag):
+        hasher = upThread(5, 'hash', tag)
+        hasher.start()
+
+# the function that gets called whenever a user clicks on
+#  a hashtag in the main window
 def clickHash(tag):
-        print(tag)
+        if SEARCH is not None:
+                if CON is not None:
+                        CON.placeText(ERRORS_SIGS['search'])
+                else:
+                        ERR.append(getTime()
+                                   + ERRORS_SIGS['search'])
+        else:
+                global SEARCH
+                SEARCH = searchDialog(root, "Search")
+                SEARCH.putText(api.GetSearch(term=tag))
 
 
 # takes the clicked on user name and puts it in the
@@ -489,7 +534,10 @@ def getTime():
 def quit(thread):
         
         if CON is not None:
-                CON.closeThisWindow()
+                CON.close()
+        
+        if SEARCH is not None:
+                SEARCH.close()
         
         global STREAM_UPDATE
         STREAM_UPDATE = False
@@ -539,7 +587,7 @@ def update(shot, last_id):
                                 ):
                                         global LAST_ID
                                         LAST_ID['tweet'] = last_id
-                                        updateDisplay(STATUSES)
+                                        updateDisplay(STATUSES, text, hyper)
                                 
                                 for i in range(18):
                                         sleep(5)
@@ -591,7 +639,7 @@ def update(shot, last_id):
                         if len(STATUSES) > 0:
                                 global LAST_ID
                                 LAST_ID['tweet'] = STATUSES[0].id
-                                updateDisplay(STATUSES)
+                                updateDisplay(STATUSES, text, hyper)
                 except twitter.TwitterError:
                         if CON is not None:
                                 CON.placeText((getTime()
