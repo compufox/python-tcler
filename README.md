@@ -17,9 +17,11 @@ Based on the [python-twitter](https://github.com/bear/python-twitter)
 
 - Keyboard shortcuts to easily access GUI buttons without using a mouse
 
-# To come
-
 - Search for hashtag by clicking hashtag
+
+- Searching Twitter for keywords
+
+# To come
 
 - URL shortening (when you post a URL)
 
