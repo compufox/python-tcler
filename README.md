@@ -19,7 +19,7 @@ Based on the [python-twitter](https://github.com/bear/python-twitter)
 
 - Search for hashtag by clicking hashtag
 
-- Searching Twitter for keywords
+- Search Twitter for keywords
 
 # To come
 

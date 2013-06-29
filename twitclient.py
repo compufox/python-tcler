@@ -183,7 +183,7 @@ class searchDialog(Toplevel):
                 self.searchy.config(wrap=WORD)
                 self.search_entry = Entry(self.top)
                 self.close = Button(self.top, text="Close", command=self.close)
-                self.search_button = Button(self.top, text="Search")
+                self.search_button = Button(self.top, text="Search", command=self.searchThreader)
                 self.scrollbar = Scrollbar(self.top)
                 
                 self.scrollbar.pack(side=RIGHT, fill=Y, expand=0)
@@ -202,6 +202,24 @@ class searchDialog(Toplevel):
         
         def putText(self, text):
                 updateDisplay(text, self.searchy, self.linker)
+                
+        
+        def clearSearch(self):
+                self.searchy.config(state=NORMAL)
+                self.searchy.delete(1.0, END)
+                self.searchy.config(state=DISABLED)
+        
+                
+        def searchThreader(self, event=None):
+                self.sear = upThread(6, 'search', self)
+                self.sear.start()
+                
+        def search(self):
+                keyword = self.search_entry.get()
+                self.search_entry.delete(0, END)
+                self.clearSearch()
+                self.putText(api.GetSearch(term=keyword))
+                
 
 # a small class that allows for a Toplevel widget to
 #  become active with the console log
@@ -218,8 +236,9 @@ class conDialog(Toplevel):
                 self.logger.config(wrap=WORD)
                 
                 self.close = Button(self.top, text="Close",
-                                    command=self.closeThisWindow)
+                                    command=self.close)
                 self.close.pack(fill=X, expand=0)
+                self.close.focus()
                 
                 self.logger.tag_config('backlog', foreground="grey")
                 self.logger.tag_config('ERR', foreground="IndianRed1")
@@ -273,6 +292,8 @@ class upThread (threading.Thread):
                         self.tweet_id = args
                 elif name == "hash":
                         self.tweet_id = args
+                elif name == "search":
+                        self.dialog = args
                 
         # starts the threads while making a note in the backlog/console
         def run(self):
@@ -312,6 +333,8 @@ class upThread (threading.Thread):
                         deleteTweet()
                 elif self.name == "hash":
                         clickHash(self.tweet_id)
+                elif self.name == "search":
+                        self.dialog.search()
                 if CON is not None and not self.threadID < 2:
                         CON.placeText(getTime()
                                       + "- "
