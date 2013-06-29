@@ -178,6 +178,8 @@ class searchDialog(Toplevel):
         def __init__(self, parent, title):
                 self.top = Toplevel(parent)
                 self.top.wm_title(title)
+                self.top.bind("<Return>", self.searchThreader)
+                self.top.bind("<Escape>", self.close)
                 
                 self.searchy = Text(self.top)
                 self.searchy.config(wrap=WORD)
@@ -195,7 +197,7 @@ class searchDialog(Toplevel):
                 
                 self.linker = HyperlinkManager(self.searchy)
                 
-        def close(self):
+        def close(self, event=None):
                 global SEARCH
                 SEARCH = None
                 self.top.destroy()
@@ -210,14 +212,18 @@ class searchDialog(Toplevel):
                 self.searchy.config(state=DISABLED)
         
                 
-        def searchThreader(self, event=None):
-                self.sear = upThread(6, 'search', self)
+        def searchThreader(self, event=None, text=None):
+                self.sear = upThread(6, 'search', (self, text))
                 self.sear.start()
                 
-        def search(self):
-                keyword = self.search_entry.get()
-                self.search_entry.delete(0, END)
+        def search(self, toSearch=None):
+                if toSearch is None:
+                        keyword = self.search_entry.get()
+                        self.search_entry.delete(0, END)
+                else:
+                        keyword = toSearch
                 self.clearSearch()
+                self.top.wm_title("Search - " + keyword)
                 self.putText(api.GetSearch(term=keyword))
                 
 
@@ -290,7 +296,10 @@ class upThread (threading.Thread):
                         self.entry = args
                 elif name == "post":
                         self.tweet_id = args
-                elif name == "hash":
+                elif (
+                        name == "hash" and
+                        args is not None
+                ):
                         self.tweet_id = args
                 elif name == "search":
                         self.dialog = args
@@ -334,7 +343,7 @@ class upThread (threading.Thread):
                 elif self.name == "hash":
                         clickHash(self.tweet_id)
                 elif self.name == "search":
-                        self.dialog.search()
+                        self.dialog[0].search(self.dialog[1])
                 if CON is not None and not self.threadID < 2:
                         CON.placeText(getTime()
                                       + "- "
@@ -380,7 +389,9 @@ def updateDisplay(status, tfield, linkman):
                         for word in reversed(s.text.split(' ')):
                                 if (
                                         word.split(':')[0] == 'http' or
-                                        word.split(':')[0] == 'https'
+                                        word.split(':')[0] == 'https' or
+                                        word.split(':')[0] == '\nhttp' or
+                                        word.split(':')[0] == '\nhttps'
                                 ):
                                         tfield.insert(counter, " ")
                                         tfield.insert(counter,
@@ -446,23 +457,29 @@ def oneShotUpdate(event=None):
 
 # starts a thread to make the GetSearch method run in the
 #  background
-def hashThreader(tag):
+def hashThreader(tag=None):
         hasher = upThread(5, 'hash', tag)
         hasher.start()
 
 # the function that gets called whenever a user clicks on
 #  a hashtag in the main window
-def clickHash(tag):
+def clickHash(tag=None):
         if SEARCH is not None:
-                if CON is not None:
-                        CON.placeText(ERRORS_SIGS['search'])
-                else:
-                        ERR.append(getTime()
-                                   + ERRORS_SIGS['search'])
+                try:
+                        if tag is not None:
+                                SEARCH.searchThreader(None, tag)
+                except:
+                        if CON is not None:
+                                CON.placeText(getTime()
+                                              + ERRORS_SIGS['search'])
+                        else:
+                                ERR.append(getTime()
+                                           + ERRORS_SIGS['search'])
         else:
                 global SEARCH
                 SEARCH = searchDialog(root, "Search")
-                SEARCH.putText(api.GetSearch(term=tag))
+                if tag is not None:
+                        SEARCH.putText(api.GetSearch(term=tag))
 
 
 # takes the clicked on user name and puts it in the
@@ -495,8 +512,20 @@ def post():
         toPost = entry.get()
         entry.delete(0, END)
         
-        global LAST_ID
-        LAST_ID['self'] = api.PostUpdate(toPost).id
+        try:
+                global LAST_ID
+                LAST_ID['self'] = api.PostUpdate(toPost).id
+        except URLError:
+                if CON is None:
+                        ERR.append((getTime()
+                                   + ERRORS_SIGS['net'],
+                                   'ERR'))
+                else:
+                        CON.placeText((getTime()
+                                       + ERRORS_SIGS['net'],
+                                       'ERR'))
+                
+                entry.insert(INSERT, toPost)
 
 
 # deletes the last tweet posted by the user
@@ -774,6 +803,7 @@ scroll.config(command=text.yview)
 menu = Menu(root)
 menu.add_command(label="Update", command=oneShotUpdate)
 menu.add_command(label="Console", command=showConsole)
+menu.add_command(label="Search", command=hashThreader)
 menu.add_command(label="Delete last tweet", command=delThreader)
 menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 root.config(menu=menu)
