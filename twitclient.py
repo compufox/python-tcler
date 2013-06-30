@@ -296,10 +296,7 @@ class upThread (threading.Thread):
                         self.entry = args
                 elif name == "post":
                         self.tweet_id = args
-                elif (
-                        name == "hash" and
-                        args is not None
-                ):
+                elif name == "hash":
                         self.tweet_id = args
                 elif name == "search":
                         self.dialog = args
@@ -341,7 +338,10 @@ class upThread (threading.Thread):
                 elif self.name == "del":
                         deleteTweet()
                 elif self.name == "hash":
-                        clickHash(self.tweet_id)
+                        if self.tweet_id is None:
+                                clickHash()
+                        else:
+                                clickHase(self.tweet_id)
                 elif self.name == "search":
                         self.dialog[0].search(self.dialog[1])
                 if CON is not None and not self.threadID < 2:
