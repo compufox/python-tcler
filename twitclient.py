@@ -178,6 +178,7 @@ class searchDialog(Toplevel):
         def __init__(self, parent, title):
                 self.top = Toplevel(parent)
                 self.top.wm_title(title)
+                self.top.wm_minsize(width=300, height=400)
                 self.top.bind("<Return>", self.searchThreader)
                 self.top.bind("<Escape>", self.close)
                 
@@ -224,7 +225,10 @@ class searchDialog(Toplevel):
                         keyword = toSearch
                 self.clearSearch()
                 self.top.wm_title("Search - " + keyword)
-                self.putText(api.GetSearch(term=keyword))
+                if keyword.split('@')[0] == '':
+                        self.putText(api.GetUserTimeline(screen_name=keyword.split('@')[1]))
+                else:
+                        self.putText(api.GetSearch(term=keyword))
                 
 
 # a small class that allows for a Toplevel widget to
@@ -341,7 +345,7 @@ class upThread (threading.Thread):
                         if self.tweet_id is None:
                                 clickHash()
                         else:
-                                clickHase(self.tweet_id)
+                                clickHash(self.tweet_id)
                 elif self.name == "search":
                         self.dialog[0].search(self.dialog[1])
                 if CON is not None and not self.threadID < 2:
@@ -399,13 +403,19 @@ def updateDisplay(status, tfield, linkman):
                                                     linkman.add(clickLink,
                                                               word,
                                                               "hyper"))
-                                elif word.split('@')[0] == '':
+                                elif (
+                                        word.split('@')[0] == '' or
+                                        word.split('\n@')[0] == ''
+                                ):
                                         tfield.insert(counter,
                                                     word + " ",
                                                     linkman.add(clickAuthor,
                                                               word,
                                                               "inlineH"))
-                                elif word.split('#')[0] == '':
+                                elif (
+                                        word.split('#')[0] == '' or
+                                        word.split('\n#')[0] == ''
+                                ):
                                         tfield.insert(counter,
                                                     word + " ",
                                                     linkman.add(hashThreader,
@@ -479,7 +489,7 @@ def clickHash(tag=None):
                 global SEARCH
                 SEARCH = searchDialog(root, "Search")
                 if tag is not None:
-                        SEARCH.putText(api.GetSearch(term=tag))
+                        SEARCH.search(tag)
 
 
 # takes the clicked on user name and puts it in the
@@ -775,7 +785,7 @@ root.wm_minsize(width=200, height=400)
 root.bind("<Return>", postThreader)
 root.bind("<Control-u>", oneShotUpdate)
 root.bind("<Control-c>", showConsole)
-root.bind("<Control-d>", delThreader)
+root.bind("<Control-r>", delThreader)
 
 global TEXT
 TEXT = StringVar(root)

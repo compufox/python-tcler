@@ -21,12 +21,10 @@ Based on the [python-twitter](https://github.com/bear/python-twitter)
 
 - Search Twitter for keywords
 
+- View user's timeline
+
 # To come
 
 - URL shortening (when you post a URL)
-
-- View user's timeline
-
-- Regular search feature
 
 - Retweet tweets by clicking on them
