@@ -62,6 +62,7 @@ import twitter
 import threading
 import webbrowser
 import get_access_token
+import shortner
 
 from os import path
 from urllib2 import URLError
@@ -304,6 +305,8 @@ class upThread (threading.Thread):
                         self.tweet_id = args
                 elif name == "search":
                         self.dialog = args
+                elif name == 'short':
+                        self.tweet_id = args
                 
         # starts the threads while making a note in the backlog/console
         def run(self):
@@ -348,6 +351,8 @@ class upThread (threading.Thread):
                                 clickHash(self.tweet_id)
                 elif self.name == "search":
                         self.dialog[0].search(self.dialog[1])
+                elif self.name == "short":
+                        self.tweet_id.getLink()
                 if CON is not None and not self.threadID < 2:
                         CON.placeText(getTime()
                                       + "- "
@@ -463,6 +468,11 @@ def updateDisplay(status, tfield, linkman):
 def oneShotUpdate(event=None):
         one_update = upThread(3, "update", 1)
         one_update.start()
+
+
+def shortThreader(event=None):
+        shorten = upThread(6, "short", short)
+        shorten.start()
 
 
 # starts a thread to make the GetSearch method run in the
@@ -808,6 +818,8 @@ entry = Entry(root)
 entry.focus()
 entry.pack(fill=X, expand=1, side=RIGHT)
 
+short = shortner.Shorten(entry)
+
 scroll.config(command=text.yview)
 
 menu = Menu(root)
@@ -815,6 +827,7 @@ menu.add_command(label="Update", command=oneShotUpdate)
 menu.add_command(label="Console", command=showConsole)
 menu.add_command(label="Search", command=hashThreader)
 menu.add_command(label="Delete last tweet", command=delThreader)
+menu.add_command(label="Shorten link", command=shortThreader)
 menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 root.config(menu=menu)
 
