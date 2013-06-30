@@ -796,6 +796,7 @@ root.bind("<Return>", postThreader)
 root.bind("<Control-u>", oneShotUpdate)
 root.bind("<Control-c>", showConsole)
 root.bind("<Control-r>", delThreader)
+root.bind("<Control-s>", shortThreader)
 
 global TEXT
 TEXT = StringVar(root)
