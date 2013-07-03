@@ -129,6 +129,9 @@ TEXT = None
 global CON
 CON = None
 
+global API
+API = None
+
 
 # class that helps handle the task of managing
 #  the various 'clicky' actions for text
@@ -231,12 +234,12 @@ class searchDialog(Toplevel):
                 self.top.wm_title("Search - " + keyword)
                 if keyword.split('@')[0] == '':
                         self.putText(
-                            api.GetUserTimeline(
+                            API.GetUserTimeline(
                                 screen_name=keyword.split('@')[1]
                             )
                         )
                 else:
-                        self.putText(api.GetSearch(term=keyword))
+                        self.putText(API.GetSearch(term=keyword))
 
 
 # a small class that allows for a Toplevel widget to
@@ -544,7 +547,7 @@ def post():
 
         try:
                 global LAST_ID
-                LAST_ID['self'] = api.PostUpdate(toPost).id
+                LAST_ID['self'] = API.PostUpdate(toPost).id
         except URLError:
                 if CON is None:
                         ERR.append((getTime()
@@ -561,7 +564,7 @@ def post():
 # deletes the last tweet posted by the user in the application
 def deleteTweet(event=None):
         if LAST_ID['self'] != 0:
-                api.DestroyStatus(LAST_ID['self'])
+                API.DestroyStatus(LAST_ID['self'])
                 if CON is not None:
                         CON.placeText(getTime()
                                       + "- Last tweet deleted")
@@ -612,6 +615,10 @@ def getTime():
                    + ":" + secs)
 
 
+def clearDisplay():
+        text.delete(0, END)
+
+
 # quits the threads and destroys the widgets
 def quit(thread):
         if CON is not None:
@@ -626,6 +633,20 @@ def quit(thread):
         thread.join()
         
         root.destroy()
+
+
+# adds a new user to the user acct database
+def addUserAcct():
+        API.ClearCredentials()
+        clearDisplay()
+        creds = get_access_token.startLogin()
+        
+        global API
+        API = twitter.Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
+                          consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
+                          access_token_key=creds[0],
+                          access_token_secret=creds[1])
+        oneShotUpdate()
 
 
 # starts a thread to run the post function. (Made this just so the GUI
@@ -656,7 +677,7 @@ def update(shot, last_id):
                 while STREAM_UPDATE:
                         STATUSES = list()
                         try:
-                                STATUSES = api.GetHomeTimeline(since_id=last_id
+                                STATUSES = API.GetHomeTimeline(since_id=last_id
                                                                )
                                 if len(STATUSES) != 0:
                                         last_id = STATUSES[0].id
@@ -708,7 +729,7 @@ def update(shot, last_id):
         else:
                 try:
                         STATUSES = ()
-                        STATUSES = api.GetHomeTimeline(since_id=last_id
+                        STATUSES = API.GetHomeTimeline(since_id=last_id
                                                        )
                         if len(STATUSES) > 0:
                                 global LAST_ID
@@ -731,20 +752,12 @@ def update(shot, last_id):
                                 ERR.append((getTime()
                                            + ERRORS_SIGS['net'], 'ERR'))
 
-# OS checking code.
-if system() == "Windows":
-        if not path.exists(path.expanduser('~\AppData\\Roaming\\tcler.txt')):
-                get_access_token.startLogin()
-else:
-        # this assumes that if you aren't on windows, then
-        #  you are running some Unix based system (including
-        #  OS X)
-        if not path.exists(path.expanduser('~/.tcler')):
+# checks the user database and checks if it exists
+if cred_man.getTableStatus():
                 get_access_token.startLogin()
 
-# gets the user's creds and splits the key and secret up
+# gets the user's creds
 try:
-#       red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
         red = cred_man.getUserCreds(cred_man.getUser(1))
 except:
         ERR.append((getTime() + ERRORS_SIGS['login'], 'ERR'))
@@ -756,7 +769,8 @@ ASS_KEY = red[0]
 ASS_SECRET = red[1]
 
 # get the API reference
-api = twitter.Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
+global API
+API = twitter.Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
                   consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
                   access_token_key=ASS_KEY,
                   access_token_secret=ASS_SECRET)

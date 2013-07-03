@@ -29,6 +29,7 @@ except:
   from cgi import parse_qsl
 
 import oauth2 as oauth
+from twitter import Api
 
 global REQ_TOK
 REQ_TOK = None
@@ -36,6 +37,8 @@ REQ_TOK = None
 global ENTRY
 ENTRY = None
 
+KEY = None
+SECRET = None
 
 # open the oauth link in a  browser
 def click(event=None):
@@ -68,7 +71,17 @@ def getInfo(oauth_consumer, root):
 
 
 def writeInfo(key, secret):
-  cred_man.addUser(key, secret)
+  api = Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
+            consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
+            access_token_key=key,
+            access_token_secret=secret)
+  
+  KEY = key
+  SECRET = secret
+  
+  cred_man.addUser(key, secret, api.VerifyCredentials().GetScreenName())
+  api.ClearCredentials()
+
 
 REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
 ACCESS_TOKEN_URL  = 'https://api.twitter.com/oauth/access_token'
@@ -124,3 +137,5 @@ def startLogin():
   click()
   
   root.mainloop()
+  
+  return (KEY, SECRET)

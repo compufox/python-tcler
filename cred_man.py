@@ -13,6 +13,7 @@ from base64 import b64encode, b64decode
 WINDOWS_PATH = path.expanduser('~\AppData\\Roaming\\tcler.db')
 UNIX_PATH = path.expanduser('~/.tcler.db')
 DB_CUR = None
+TABLE_CREATED = False
 
 
 def createTable():
@@ -21,6 +22,11 @@ def createTable():
     key varchar(150),
     secret varchar(150))''')
     DB_CUR.commit()
+    TABLE_CREATED = True
+
+
+def getTableStatus():
+    return TABLE_CREATED
 
 
 def addUser(key, secret, name=None):
@@ -55,10 +61,14 @@ def getUserId(key, secret):
                           b64encode(key), b64encode(secret)).fetchall()[0][0]
 
 
-def addUserName(name, id):
+def addUserName(name, key, secret):
     DB_CUR.execute('''UPDATE creds SET screen_name = ?
-    WHERE screen_name = NULL AND id = ?''',
-                   (name, id))
+    WHERE screen_name = NULL
+    AND key = ?
+    AND secret = ?''',
+                   (b64encode(name),
+                    b64encode(key),
+                    b64encode(secret)))
     DB_CUR.commit()
 
 
