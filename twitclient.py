@@ -619,6 +619,23 @@ def clearDisplay():
         text.delete(0, END)
 
 
+def switchToAcct(screen_name):
+        
+
+# adds new account to the database, then switches t
+def addAccount():
+        clearDisplay()
+        get_access_token.startLogin()
+        creds = cred_man.getUserCreds(cred_man.getNewestAccount())
+        
+        global API
+        API = twitter.Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
+                          consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
+                          access_token_key=creds[0],
+                          access_token_secret=creds[1])
+        oneShotUpdate()
+
+
 # quits the threads and destroys the widgets
 def quit(thread):
         if CON is not None:
@@ -754,7 +771,7 @@ def update(shot, last_id):
 
 # checks the user database and checks if it exists
 if cred_man.getTableStatus():
-                get_access_token.startLogin()
+        get_access_token.startLogin()
 
 # gets the user's creds
 try:
@@ -828,17 +845,26 @@ entry = Entry(root)
 entry.focus()
 entry.pack(fill=X, expand=1, side=RIGHT)
 
-short = shortner.Shorten(entry)
+short = shortner.Shorten('AIzaSyCup5SNezq62uKQQQHQoFTmqKAGnJDoq-A',entry)
 
 scroll.config(command=text.yview)
 
 menu = Menu(root)
+acctMenu = Menu(menu, tearoff=0)
 menu.add_command(label="Update", command=oneShotUpdate)
 menu.add_command(label="Console", command=showConsole)
 menu.add_command(label="Search", command=hashThreader)
 menu.add_command(label="Delete last tweet", command=delThreader)
 menu.add_command(label="Shorten link", command=shortThreader)
-menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
+menu.add_cascade(label="Accounts", menu=acctMenu)
+menu.add_separator()
+menu.add_command(label="Quit", command=lambda x: quit(UPDATE_THREAD))
+
+for acct in cred_man.getScreenNames():
+        acctMenu.add_command(label=acct, command=lambda x: switchToAcct(acct))
+
+acctMenu.add_command(label="Add Account", command=addAccount)
+
 root.config(menu=menu)
 
 #

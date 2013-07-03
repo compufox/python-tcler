@@ -17,7 +17,7 @@ TABLE_CREATED = False
 
 
 def createTable():
-    DB_CUR.execute('''CREATE TABLE creds(id PRIMARY KEY AUTOINCREMENT,
+    DB_CUR.execute('''CREATE TABLE creds(id INTEGER PRIMARY KEY AUTOINCREMENT,
     screen_name varchar(100),
     key varchar(150),
     secret varchar(150))''')
@@ -29,21 +29,27 @@ def getTableStatus():
     return TABLE_CREATED
 
 
-def addUser(key, secret, name=None):
+def addUser(key, secret, name):
     try:
         if name is not None:
             DB_CUR.execute('''INSERT INTO creds VALUES(NULL, ?, ?, ?)''',
                            (b64encode(name),
                             b64encode(key),
-                            b64encode(secret)))
+                            b64encode(secret))
+            )
         else:
             DB_CUR.execute('''INSERT INTO creds VALUES(NULL, NULL, ?, ?)''',
                            (b64encode(key),
-                            b64encode(secret)))
+                            b64encode(secret))
+            )
         DB_CUR.commit()
         return 0
     except sqlite3.OperationalError:
         return -1
+
+
+def getNewestAccount():
+    DB_CUR.execute(''SELECT
 
 
 def getScreenNames():
@@ -73,14 +79,14 @@ def addUserName(name, key, secret):
 
 
 def getUser(num):
-    row = DB_CUR.execute('SELECT screen_name FROM creds WHERE id = %s'
-                         % num).fetchall()[0]
-    return b64decode(row[0])
+    row = DB_CUR.execute('SELECT screen_name FROM creds WHERE id = ?', (str(num))).fetchall()
+    print row
+#    return b64decode(row[0])
+
 
 
 def getUserCreds(name):
-    res = DB_CUR.execute('SELECT key, secret FROM creds WHERE screen_name = %s'
-                         % b64encode(name)).fetchall()[0]
+    res = DB_CUR.execute('''SELECT key, secret FROM creds WHERE screen_name = ?''', (str(b64encode(name)))).fetchall()[0]
     res = (b64decode(res[0]), b64decode(res[1]))
     return res
 
@@ -98,13 +104,14 @@ else:
 
 try:
     DB_CUR.execute('SELECT * FROM creds')
+    TABLE_CREATED = True
 except sqlite3.OperationalError:
     createTable()
 
 if system() == "Windows":
     OLD_CREDS = '.'.join((WINDOWS_PATH.split('.db')[0], 'txt'))
 else:
-    OLD_CREDS = '.'.join((UNIX_PATH.split('.db')[0], 'txt'))
+    OLD_CREDS = UNIX_PATH.split('.db')[0]
 
 if path.exists(OLD_CREDS):
     f = open(OLD_CREDS, 'r')
@@ -114,7 +121,7 @@ if path.exists(OLD_CREDS):
               consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
               access_token_key=creds[0],
               access_token_secret=creds[1])
-    if addUser(ins.VerifyUser().screen_name,
+    if addUser(ins.VerifyCredentials().GetScreenName(),
                creds[0],
                creds[1]) != 0:
         print "User not added to database"

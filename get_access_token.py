@@ -76,9 +76,6 @@ def writeInfo(key, secret):
             access_token_key=key,
             access_token_secret=secret)
   
-  KEY = key
-  SECRET = secret
-  
   cred_man.addUser(key, secret, api.VerifyCredentials().GetScreenName())
   api.ClearCredentials()
 
@@ -137,5 +134,3 @@ def startLogin():
   click()
   
   root.mainloop()
-  
-  return (KEY, SECRET)

@@ -53,7 +53,6 @@ class Shorten():
             self.entry = entry
         else:
             print "Entry cannot be None"
-            #raise error about entry being null
 
     def getLongLink(self, link):
         req = urllib2.Request(URL + "shortUrl=" + link)
