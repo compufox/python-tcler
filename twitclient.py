@@ -620,7 +620,8 @@ def clearDisplay():
 
 
 def switchToAcct(screen_name):
-        
+        print 'TODO'
+
 
 # adds new account to the database, then switches t
 def addAccount():

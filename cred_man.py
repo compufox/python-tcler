@@ -13,22 +13,28 @@ from base64 import b64encode, b64decode
 WINDOWS_PATH = path.expanduser('~\AppData\\Roaming\\tcler.db')
 UNIX_PATH = path.expanduser('~/.tcler.db')
 DB_CUR = None
+
+global TABLE_CREATED
 TABLE_CREATED = False
 
 
+# creates the table if the table doesn't exist
 def createTable():
     DB_CUR.execute('''CREATE TABLE creds(id INTEGER PRIMARY KEY AUTOINCREMENT,
     screen_name varchar(100),
     key varchar(150),
     secret varchar(150))''')
     DB_CUR.commit()
+    global TABLE_CREATED
     TABLE_CREATED = True
 
 
+# gets the status of the table (whether or not it's created)
 def getTableStatus():
     return TABLE_CREATED
 
 
+# adds a user to the database
 def addUser(key, secret, name):
     try:
         if name is not None:
@@ -48,10 +54,13 @@ def addUser(key, secret, name):
         return -1
 
 
+# gets the newest account added to the db
 def getNewestAccount():
-    DB_CUR.execute(''SELECT
+    return DB_CUR.execute('''SELECT screen_name FROM creds WHERE id = (
+        SELECT max(id) FROM creds)''').fetchall()[0][0]
 
 
+# gets all the screen names in the database
 def getScreenNames():
     rows = DB_CUR.execute('SELECT screen_name FROM creds').fetchall()
     names = list()
@@ -60,6 +69,7 @@ def getScreenNames():
     return names
 
 
+# gets the id of the user in the db
 def getUserId(key, secret):
     return DB_CUR.execute('''SELECT id FROM creds
     WHERE key = ?
@@ -67,6 +77,7 @@ def getUserId(key, secret):
                           b64encode(key), b64encode(secret)).fetchall()[0][0]
 
 
+# if the user was added without a screen name, add it
 def addUserName(name, key, secret):
     DB_CUR.execute('''UPDATE creds SET screen_name = ?
     WHERE screen_name = NULL
@@ -78,20 +89,21 @@ def addUserName(name, key, secret):
     DB_CUR.commit()
 
 
+# returns the user's screen name
 def getUser(num):
     row = DB_CUR.execute('SELECT screen_name FROM creds WHERE id = ?',
                          (str(num))
-                     ).fetchall()
+                         ).fetchall()
     print row
 #    return b64decode(row[0])
 
 
-
+# gets the user credentials based on the screen name
 def getUserCreds(name):
     res = DB_CUR.execute('''SELECT key, secret FROM creds
     WHERE screen_name = ?''',
                          (str(b64encode(name)))
-                     ).fetchall()[0]
+                         ).fetchall()[0]
     res = (b64decode(res[0]), b64decode(res[1]))
     return res
 
@@ -109,6 +121,7 @@ else:
 
 try:
     DB_CUR.execute('SELECT * FROM creds')
+    global TABLE_CREATED
     TABLE_CREATED = True
 except sqlite3.OperationalError:
     createTable()
@@ -131,4 +144,3 @@ if path.exists(OLD_CREDS):
                creds[1]) != 0:
         print "User not added to database"
     remove(OLD_CREDS)
-
