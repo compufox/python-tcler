@@ -48,6 +48,13 @@ def getScreenNames():
     return names
 
 
+def getUserId(key, secret):
+    return DB_CUR.execute('''SELECT id FROM creds
+    WHERE key = ?
+    AND secret = ?''',
+                          b64encode(key), b64encode(secret)).fetchall()[0][0]
+
+
 def addUserName(name, id):
     DB_CUR.execute('''UPDATE creds SET screen_name = ?
     WHERE screen_name = NULL AND id = ?''',
