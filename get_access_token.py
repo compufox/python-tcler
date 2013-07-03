@@ -18,12 +18,9 @@
 # MODIFIED BY theZacAttacks for GUI, file, and Windows support
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-import os
-import sys
+import cred_man
 import Tkinter
 import webbrowser
-
-from platform import system
 
 # parse_qsl moved to urlparse module in v2.6
 try:
@@ -39,9 +36,11 @@ REQ_TOK = None
 global ENTRY
 ENTRY = None
 
+
 # open the oauth link in a  browser
 def click(event=None):
   webbrowser.open(LINK)
+
 
 # retrieves the pincode from the entry widget
 def getInfo(oauth_consumer, root):
@@ -67,17 +66,15 @@ def getInfo(oauth_consumer, root):
     
     root.destroy()
 
+
 def writeInfo(key, secret):
-  if system() == 'Windows':
-    open(os.path.expanduser('~\AppData\\Roaming\\tcler.txt'), 'w+').write(key +'\n'+ secret)
-  else:
-    # assuming a Linux based system (including OS X)
-    open(os.path.expanduser('~/.tcler'), 'w+').write(key + '\n' + secret)
+  cred_man.addUser(key, secret)
 
 REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
 ACCESS_TOKEN_URL  = 'https://api.twitter.com/oauth/access_token'
 AUTHORIZATION_URL = 'https://api.twitter.com/oauth/authorize'
 SIGNIN_URL        = 'https://api.twitter.com/oauth/authenticate'
+
 
 def startLogin():
   
