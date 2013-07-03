@@ -57,12 +57,15 @@
 #                box that lists the search results. Incorporate a search
 #                function into the client itself, accessable via a menu
 #                button.
+#
+#
 
 import twitter
 import threading
 import webbrowser
 import get_access_token
 import shortner
+import cred_man
 
 from os import path
 from urllib2 import URLError
@@ -130,7 +133,6 @@ CON = None
 # class that helps handle the task of managing
 #  the various 'clicky' actions for text
 class HyperlinkManager:
-        
         def __init__(self, text):
                 self.text = text
                 self.text.tag_config("hyper", foreground="blue", underline=1)
@@ -151,23 +153,23 @@ class HyperlinkManager:
                 self.text.tag_bind("hash",
                                    "<Button-1>",
                                    lambda x: self._click("hash"))
-                
+
                 self.reset()
-        
+
         def reset(self):
                 self.links = {}
-        
+
         def add(self, action, text, thisTag):
                 tag = thisTag + "-%d" % len(self.links)
                 self.links[tag] = (action, text)
                 return thisTag, tag
-        
+
         def _enter(self, event):
                 self.text.config(cursor="hand2")
-        
+
         def _leave(self, event):
                 self.text.config(cursor="")
-        
+
         def _click(self, thisTag, event=None):
                 for tag in self.text.tag_names(CURRENT):
                         if tag[:(len(thisTag) + 1)] == thisTag + "-":
@@ -182,42 +184,43 @@ class searchDialog(Toplevel):
                 self.top.wm_minsize(width=300, height=400)
                 self.top.bind("<Return>", self.searchThreader)
                 self.top.bind("<Escape>", self.close)
-                
+
                 self.searchy = Text(self.top)
                 self.searchy.config(wrap=WORD)
                 self.search_entry = Entry(self.top)
                 self.close = Button(self.top, text="Close", command=self.close)
-                self.search_button = Button(self.top, text="Search", command=self.searchThreader)
+                self.search_button = Button(self.top,
+                                            text="Search",
+                                            command=self.searchThreader)
                 self.scrollbar = Scrollbar(self.top)
-                
+
                 self.scrollbar.pack(side=RIGHT, fill=Y, expand=0)
-                self.searchy.config(yscrollcommand=self.scrollbar.set, state=DISABLED)
+                self.searchy.config(yscrollcommand=self.scrollbar.set,
+                                    state=DISABLED)
                 self.searchy.pack(side=TOP, fill=BOTH, expand=1)
                 self.search_entry.pack(side=LEFT, fill=X, expand=1)
                 self.close.pack(side=RIGHT, fill=BOTH, expand=0)
                 self.search_button.pack(side=RIGHT, fill=BOTH, expand=0)
-                
+
                 self.linker = HyperlinkManager(self.searchy)
-                
+
         def close(self, event=None):
                 global SEARCH
                 SEARCH = None
                 self.top.destroy()
-        
+
         def putText(self, text):
                 updateDisplay(text, self.searchy, self.linker)
-                
-        
+
         def clearSearch(self):
                 self.searchy.config(state=NORMAL)
                 self.searchy.delete(1.0, END)
                 self.searchy.config(state=DISABLED)
-        
-                
+
         def searchThreader(self, event=None, text=None):
                 self.sear = upThread(6, 'search', (self, text))
                 self.sear.start()
-                
+
         def search(self, toSearch=None):
                 if toSearch is None:
                         keyword = self.search_entry.get()
@@ -227,10 +230,14 @@ class searchDialog(Toplevel):
                 self.clearSearch()
                 self.top.wm_title("Search - " + keyword)
                 if keyword.split('@')[0] == '':
-                        self.putText(api.GetUserTimeline(screen_name=keyword.split('@')[1]))
+                        self.putText(
+                            api.GetUserTimeline(
+                                screen_name=keyword.split('@')[1]
+                            )
+                        )
                 else:
                         self.putText(api.GetSearch(term=keyword))
-                
+
 
 # a small class that allows for a Toplevel widget to
 #  become active with the console log
@@ -239,21 +246,21 @@ class conDialog(Toplevel):
                 self.top = Toplevel(parent)
                 self.top.wm_title(title)
                 self.top.wm_minsize(width=200, height=250)
-                
+
                 self.parent = parent
-                
+
                 self.logger = Text(self.top, width=50, height=15)
                 self.logger.pack(fill=BOTH, expand=1)
                 self.logger.config(wrap=WORD)
-                
+
                 self.close = Button(self.top, text="Close",
                                     command=self.close)
                 self.close.pack(fill=X, expand=0)
                 self.close.focus()
-                
+
                 self.logger.tag_config('backlog', foreground="grey")
                 self.logger.tag_config('ERR', foreground="IndianRed1")
-                
+            
                 for e in range(len(ERR)):
                         if len(ERR[e][1]) > 1:
                                 self.logger.insert(INSERT,
@@ -270,7 +277,7 @@ class conDialog(Toplevel):
                 self.top.destroy()
                 global CON
                 CON = None
-                
+
         # method that places the text inside the log thats in the console
         #  also stores the messages in the backlog (ERR)
         def placeText(self, message):
@@ -307,7 +314,7 @@ class upThread (threading.Thread):
                         self.dialog = args
                 elif name == 'short':
                         self.tweet_id = args
-                
+
         # starts the threads while making a note in the backlog/console
         def run(self):
                 if CON is not None and not self.threadID < 2:
@@ -369,11 +376,11 @@ class upThread (threading.Thread):
                                    + " exiting...")
                 else:
                         print(self.name + " exiting...")
-        
+
         # returns the name of the thread
         def getName(self):
                 return(self.name)
-        
+
 
 # updates the text in the text widget with supplied tuple(?) of
 #  statuses.
@@ -404,49 +411,51 @@ def updateDisplay(status, tfield, linkman):
                                 ):
                                         tfield.insert(counter, " ")
                                         tfield.insert(counter,
-                                                    word,
-                                                    linkman.add(clickLink,
-                                                              word,
-                                                              "hyper"))
+                                                      word,
+                                                      linkman.add(clickLink,
+                                                                  word,
+                                                                  "hyper"))
                                 elif (
                                         word.split('@')[0] == '' or
                                         word.split('\n@')[0] == ''
                                 ):
                                         tfield.insert(counter,
-                                                    word + " ",
-                                                    linkman.add(clickAuthor,
-                                                              word,
-                                                              "inlineH"))
+                                                      word + " ",
+                                                      linkman.add(clickAuthor,
+                                                                  word,
+                                                                  "inlineH"))
                                 elif (
                                         word.split('#')[0] == '' or
                                         word.split('\n#')[0] == ''
                                 ):
                                         tfield.insert(counter,
-                                                    word + " ",
-                                                    linkman.add(hashThreader,
-                                                              word,
-                                                              "hash"))
+                                                      word + " ",
+                                                      linkman.add(hashThreader,
+                                                                  word,
+                                                                  "hash"))
                                 elif word.find("&amp;") != -1:
                                         tfield.insert(counter,
-                                                    word.replace("&amp;",
-                                                                 "&")
-                                                    + " ")
+                                                      word.replace("&amp;",
+                                                                   "&")
+                                                      + " ")
                                 elif word.find("&lt;") != -1:
                                         tfield.insert(counter,
-                                                    word.replace("&lt;",
-                                                                 "<")
-                                                    + " ")
+                                                      word.replace("&lt;",
+                                                                   "<")
+                                                      + " ")
                                 elif word.find("&gt;") != -1:
                                         tfield.insert(counter,
-                                                    word.replace("&gt;",
-                                                                 ">")
-                                                    + " ")
+                                                      word.replace("&gt;",
+                                                                   ">")
+                                                      + " ")
                                 else:
                                         tfield.insert(counter, word + " ")
                         
                         tfield.insert(counter,
-                                    newStat,
-                                    linkman.add(clickAuthor, newStat, "handle"))
+                                      newStat,
+                                      linkman.add(clickAuthor,
+                                                  newStat,
+                                                  "handle"))
                 
                 except TclError:
                         if CON is not None:
@@ -480,6 +489,7 @@ def shortThreader(event=None):
 def hashThreader(tag=None):
         hasher = upThread(5, 'hash', tag)
         hasher.start()
+
 
 # the function that gets called whenever a user clicks on
 #  a hashtag in the main window
@@ -527,11 +537,11 @@ def showConsole(event=None):
                 CON = conDialog(root, "Console")
 
 
-# posts the status updates
+# posts the status updates and stores the id of the tweet posted
 def post():
         toPost = entry.get()
         entry.delete(0, END)
-        
+
         try:
                 global LAST_ID
                 LAST_ID['self'] = api.PostUpdate(toPost).id
@@ -544,11 +554,11 @@ def post():
                         CON.placeText((getTime()
                                        + ERRORS_SIGS['net'],
                                        'ERR'))
-                
+
                 entry.insert(INSERT, toPost)
 
 
-# deletes the last tweet posted by the user
+# deletes the last tweet posted by the user in the application
 def deleteTweet(event=None):
         if LAST_ID['self'] != 0:
                 api.DestroyStatus(LAST_ID['self'])
@@ -586,17 +596,17 @@ def getTime():
                 secs = "0" + str(localtime().tm_sec) + " "
         else:
                 secs = str(localtime().tm_sec) + " "
-                
+
         if localtime().tm_min < 10:
                 minut = "0" + str(localtime().tm_min)
         else:
                 minut = str(localtime().tm_min)
-        
+
         if localtime().tm_hour < 10:
                 hour = "0" + str(localtime().tm_hour)
         else:
                 hour = str(localtime().tm_hour)
-        
+
         return str(hour
                    + ":" + minut
                    + ":" + secs)
@@ -604,7 +614,6 @@ def getTime():
 
 # quits the threads and destroys the widgets
 def quit(thread):
-        
         if CON is not None:
                 CON.close()
         
@@ -649,10 +658,8 @@ def update(shot, last_id):
                         try:
                                 STATUSES = api.GetHomeTimeline(since_id=last_id
                                                                )
-                                
                                 if len(STATUSES) != 0:
                                         last_id = STATUSES[0].id
-                                
                                 if (
                                         len(STATUSES) > 0 and
                                         LAST_ID['tweet'] != last_id
@@ -660,12 +667,10 @@ def update(shot, last_id):
                                         global LAST_ID
                                         LAST_ID['tweet'] = last_id
                                         updateDisplay(STATUSES, text, hyper)
-                                
                                 for i in range(18):
                                         sleep(5)
                                         if not STREAM_UPDATE:
                                                 break
-                                                
                                 if not STREAM_UPDATE:
                                         break
                         except twitter.TwitterError:
@@ -682,7 +687,6 @@ def update(shot, last_id):
                                         sleep(5)
                                         if not STREAM_UPDATE:
                                                 break
-                                                
                                 if not STREAM_UPDATE:
                                         break
                         except URLError:
@@ -699,15 +703,13 @@ def update(shot, last_id):
                                         sleep(5)
                                         if not STREAM_UPDATE:
                                                 break
-                                                
                                 if not STREAM_UPDATE:
                                         break
-                        
         else:
                 try:
                         STATUSES = ()
-                        STATUSES = api.GetHomeTimeline(since_id=last_id)
-                
+                        STATUSES = api.GetHomeTimeline(since_id=last_id
+                                                       )
                         if len(STATUSES) > 0:
                                 global LAST_ID
                                 LAST_ID['tweet'] = STATUSES[0].id
@@ -729,11 +731,6 @@ def update(shot, last_id):
                                 ERR.append((getTime()
                                            + ERRORS_SIGS['net'], 'ERR'))
 
-# creates the access_token secret and key variables
-#  to use to get the api reference
-ASS_KEY = None
-ASS_SECRET = None
-
 # OS checking code.
 if system() == "Windows":
         if not path.exists(path.expanduser('~\AppData\\Roaming\\tcler.txt')):
@@ -744,18 +741,17 @@ else:
         #  OS X)
         if not path.exists(path.expanduser('~/.tcler')):
                 get_access_token.startLogin()
-        
+
 # gets the user's creds and splits the key and secret up
 try:
-        if system() != 'Windows':
-                red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
-        else:
-                red = open(path.expanduser('~\AppData\\Roaming\\tcler.txt'),
-                           'r').read().split('\n')
+#       red = open(path.expanduser('~/.tcler'), 'r').read().split('\n')
+        red = cred_man.getUserCreds(cred_man.getUser(1))
 except:
         ERR.append((getTime() + ERRORS_SIGS['login'], 'ERR'))
         red = ['nope', 'nothing']
 
+# creates the access_token secret and key variables
+#  to use to get the api reference
 ASS_KEY = red[0]
 ASS_SECRET = red[1]
 
@@ -781,7 +777,6 @@ except twitter.TwitterError:
 #  (see the update function docs for more info)
 try:
         UPDATE_THREAD = upThread(0, "update", LAST_ID['tweet'])
-        
         UPDATE_THREAD.start()
 except:
         ERR.append((getTime() + ERRORS_SIGS['update'], 'ERR'))

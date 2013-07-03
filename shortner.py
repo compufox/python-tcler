@@ -7,31 +7,57 @@
 
 import urllib2
 import json
-from Tkinter import END, INSERT
+from Tkinter import END
+
+URL = "https://www.googleapis.com/urlshortener/v1/url?"
+KEY = "key="
+
 
 class Shorten():
-    def __init__(self, entry):
+    def __init__(self, apikey, entry=None):
         self.entry = entry
-        self.url = "https://www.googleapis.com/urlshortener/v1/url?key=AIzaSyCup5SNezq62uKQQQHQoFTmqKAGnJDoq-A"
+        self.url = URL + KEY + apikey
         self.header = {'Content-Type': 'application/json'}
-        
+
     def getShortLink(self, link):
-        req = urllib2.Request(self.url, json.dumps({"longUrl": link}), self.header)
+        req = urllib2.Request(self.url,
+                              json.dumps({"longUrl": link}),
+                              self.header)
         f = urllib2.urlopen(req)
         response = json.loads(f.read())
         f.close()
         return response['id']
-        
+
     def getLink(self):
-        text = self.entry.get()
+        if self.entry is not None:
+            text = self.entry.get()
+        else:
+            text = raw_input("Link to shorten? ")
         if (
             text.split('http')[0] == '' or
             text.split('https')[0] == ''
         ):
-            self.placeText(self.getShortLink(text))
+            return self.getShortLink(text)
         else:
             return "ERR"
-        
-    def placeText(self, text):
-        self.entry.delete(0, END)
-        self.entry.insert(0, text)
+
+    def placeText(self, text, location=None):
+        if self.entry is not None:
+            self.entry.delete(0, END)
+            self.entry.insert(0, text)
+        else:
+            print text
+
+    def addEntry(self, entry):
+        if entry is not None:
+            self.entry = entry
+        else:
+            print "Entry cannot be None"
+            #raise error about entry being null
+
+    def getLongLink(self, link):
+        req = urllib2.Request(URL + "shortUrl=" + link)
+        f = urllib2.urlopen(req)
+        response = json.loads(f.read())
+        f.close()
+        return response['longUrl']
