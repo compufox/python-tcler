@@ -41,7 +41,7 @@
 #                https links now work
 #               IDEAS: make ERR a list that contains the backlog of errors
 #                and/or messages. Make console display the backlog of
-#                errors whenever it gets started
+#                errors whenever it gets started (DONE)
 #
 # 0.9.5         All messages/errors are stored in ERR which is now a global
 #                list. When the console is started the backlog of messages
@@ -56,8 +56,14 @@
 #               IDEAS: Make the hashtags clickable which opens a Toplevel
 #                box that lists the search results. Incorporate a search
 #                function into the client itself, accessable via a menu
-#                button.
+#                button. (DONE)
 #
+# 0.9.7         Users can click hashtags to search for them. Search feature
+#                added. Plain text user credentials now moved to database,
+#                and stored in an encrypted format. Users can add more than
+#                one account to use in the client, however switching between
+#                the two accounts isn't working 100% yet. Also, users can
+#                shorten links using google's goo.gl shortener
 #
 
 import twitter
@@ -67,11 +73,8 @@ import get_access_token
 import shortner
 import cred_man
 
-from os import path
 from urllib2 import URLError
-from time import sleep
-from time import localtime
-from platform import system
+from time import sleep, localtime
 
 try:
         from Tkinter import (Scrollbar, Text, Entry, Tk, Button, Toplevel,
@@ -137,6 +140,14 @@ API = None
 # to fix an update error
 global ONE_SHOT_FINISHED
 ONE_SHOT_FINISHED = False
+
+# the application consumer key
+global CON_KEY
+CON_KEY = 'qJwaqOuIuvZKlxwF4izCw'
+
+# the application consumer secret
+global CON_SECRET
+CON_SECRET = '53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8'
 
 
 # class that helps handle the task of managing
@@ -630,21 +641,27 @@ def clearDisplay():
 def switchToAcct(screen_name):
         creds = cred_man.getUserCreds(screen_name)
         
-        oldScreenName_id = cred_man.getUserId(API.VerifyCredentials().GetScreenName())
+        oldScreenName_id = cred_man.getUserId(
+            API.VerifyCredentials().GetScreenName()
+        )
         
         API.ClearCredentials()
         global API
-        API = twitter.Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
-                          consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
+        API = twitter.Api(consumer_key=CON_KEY,
+                          consumer_secret=CON_SECRET,
                           access_token_key=creds[0],
                           access_token_secret=creds[1])
         global LAST_ID
-        LAST_ID['tweet']=0
-        LAST_ID['self']=0
-        LAST_ID['mention']=0
+        LAST_ID['tweet'] = 0
+        LAST_ID['self'] = 0
+        LAST_ID['mention'] = 0
         
-        acctMenu.entryconfig(cred_man.getUserId(screen_name) -1, label="*"+screen_name)
-        acctMenu.entryconfig(oldScreenName_id -1, label=acctMenu.entrycget(oldScreenName_id -1, "label").split('*')[1])
+        acctMenu.entryconfig(cred_man.getUserId(screen_name) - 1,
+                             label="*" + screen_name)
+        acctMenu.entryconfig(oldScreenName_id - 1,
+                             label=acctMenu.entrycget(oldScreenName_id - 1,
+                                                      "label").split('*')[1]
+                             )
         
         clearDisplay()
         oneShotUpdate()
@@ -658,12 +675,15 @@ def addAccount():
         creds = cred_man.getUserCreds(cred_man.getNewestAccount())
         
         global API
-        API = twitter.Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
-                          consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
+        API = twitter.Api(consumer_key=CON_KEY,
+                          consumer_secret=CON_SECRET,
                           access_token_key=creds[0],
                           access_token_secret=creds[1])
         name = API.VerifyCredentials().GetScreenName()
-        acctMenu.insert(cred_man.getUserCount(), command, label="*" + name, command=lambda: switchToAcct(name))
+        acctMenu.insert_command(cred_man.getUserCount(),
+                                label="*" + name,
+                                command=lambda: switchToAcct(name)
+                                )
         
         oneShotUpdate()
 
@@ -682,20 +702,6 @@ def quit(thread):
         thread.join()
         
         root.destroy()
-
-
-# adds a new user to the user acct database
-def addUserAcct():
-        API.ClearCredentials()
-        clearDisplay()
-        creds = get_access_token.startLogin()
-        
-        global API
-        API = twitter.Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
-                          consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
-                          access_token_key=creds[0],
-                          access_token_secret=creds[1])
-        oneShotUpdate()
 
 
 # starts a thread to run the post function. (Made this just so the GUI
@@ -724,7 +730,8 @@ def update(shot, last_id):
                 while STREAM_UPDATE:
                         STATUSES = list()
                         try:
-                                STATUSES = API.GetHomeTimeline(since_id=last_id)
+                                STATUSES = API.GetHomeTimeline(since_id=last_id
+                                                               )
                                 if len(STATUSES) != 0:
                                         last_id = STATUSES[0].id
                                 if (
@@ -878,7 +885,7 @@ entry = Entry(root)
 entry.focus()
 entry.pack(fill=X, expand=1, side=RIGHT)
 
-short = shortner.Shorten('AIzaSyCup5SNezq62uKQQQHQoFTmqKAGnJDoq-A',entry)
+short = shortner.Shorten('AIzaSyCup5SNezq62uKQQQHQoFTmqKAGnJDoq-A', entry)
 
 scroll.config(command=text.yview)
 
