@@ -129,8 +129,14 @@ TEXT = None
 global CON
 CON = None
 
+# to accomodate the multiple users feature, the api variable
+#  needs to be global
 global API
 API = None
+
+# to fix an update error
+global ONE_SHOT_FINISHED
+ONE_SHOT_FINISHED = False
 
 
 # class that helps handle the task of managing
@@ -688,10 +694,8 @@ def delThreader(event=None):
 #   button.
 def update(shot, last_id):
         if shot != 1:
-                for i in range(20):
+                while STREAM_UPDATE and not ONE_SHOT_FINISHED:
                         sleep(5)
-                        if not STREAM_UPDATE:
-                                break
                 while STREAM_UPDATE:
                         STATUSES = list()
                         try:
@@ -744,6 +748,8 @@ def update(shot, last_id):
                                 if not STREAM_UPDATE:
                                         break
         else:
+                global ONE_SHOT_FINISHED
+                ONE_SHOT_FINISHED = False
                 try:
                         STATUSES = ()
                         STATUSES = API.GetHomeTimeline(since_id=last_id
@@ -768,6 +774,8 @@ def update(shot, last_id):
                                 print(ERRORS_SIGS['net'])
                                 ERR.append((getTime()
                                            + ERRORS_SIGS['net'], 'ERR'))
+                global ONE_SHOT_FINISHED
+                ONE_SHOT_FINISHED = True
 
 # checks the user database and checks if it exists
 if not cred_man.getTableStatus():
