@@ -70,11 +70,14 @@ def getScreenNames():
 
 
 # gets the id of the user in the db
-def getUserId(key, secret):
-    return DB_CUR.execute('''SELECT id FROM creds
-    WHERE key = ?
-    AND secret = ?''',
-                          b64encode(key), b64encode(secret)).fetchall()[0][0]
+def getUserId(name):
+    return DB_CUR.execute('''SELECT id FROM creds WHERE screen_name = '%s' ''' %
+                          b64encode(name)).fetchone()[0]
+
+
+# gets the number of users in the db
+def getUserCount():
+    return DB_CUR.execute('''SELECT max(id) FROM creds''').fetchone()[0]
 
 
 # if the user was added without a screen name, add it
@@ -91,11 +94,13 @@ def addUserName(name, key, secret):
 
 # returns the user's screen name
 def getUser(num):
-    row = DB_CUR.execute('SELECT screen_name FROM creds WHERE id = ?',
-                         (str(num))
-                         ).fetchall()
-#    print row
-    return b64decode(row[0][0])
+    try:
+        row = DB_CUR.execute('SELECT screen_name FROM creds WHERE id = ?',
+                             (str(num))
+                             ).fetchall()
+        return b64decode(row[0][0])
+    except sqlite3.OperationalError:
+        return -1
 
 
 # gets the user credentials based on the screen name

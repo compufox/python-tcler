@@ -622,16 +622,38 @@ def getTime():
 
 
 def clearDisplay():
-        text.delete(0, END)
+        text.config(state=NORMAL)
+        text.delete(1.0, END)
+        text.config(state=DISABLED)
 
 
 def switchToAcct(screen_name):
-        print 'TODO'
+        creds = cred_man.getUserCreds(screen_name)
+        
+        oldScreenName_id = cred_man.getUserId(API.VerifyCredentials().GetScreenName())
+        
+        API.ClearCredentials()
+        global API
+        API = twitter.Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
+                          consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
+                          access_token_key=creds[0],
+                          access_token_secret=creds[1])
+        global LAST_ID
+        LAST_ID['tweet']=0
+        LAST_ID['self']=0
+        LAST_ID['mention']=0
+        
+        acctMenu.entryconfig(cred_man.getUserId(screen_name) -1, label="*"+screen_name)
+        acctMenu.entryconfig(oldScreenName_id -1, label=acctMenu.entrycget(oldScreenName_id -1, "label").split('*')[1])
+        
+        clearDisplay()
+        oneShotUpdate()
 
 
 # adds new account to the database, then switches t
 def addAccount():
         clearDisplay()
+        API.ClearCredentials()
         get_access_token.startLogin()
         creds = cred_man.getUserCreds(cred_man.getNewestAccount())
         
@@ -640,6 +662,9 @@ def addAccount():
                           consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
                           access_token_key=creds[0],
                           access_token_secret=creds[1])
+        name = API.VerifyCredentials().GetScreenName()
+        acctMenu.insert(cred_man.getUserCount(), command, label="*" + name, command=lambda: switchToAcct(name))
+        
         oneShotUpdate()
 
 
@@ -869,7 +894,9 @@ menu.add_separator()
 menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 
 for acct in cred_man.getScreenNames():
-        acctMenu.add_command(label=acct, command=lambda x: switchToAcct(acct))
+        acctMenu.add_command(label=acct, command=lambda: switchToAcct(acct))
+
+acctMenu.entryconfig(0, label="*" + acctMenu.entrycget(0, "label"))
 
 acctMenu.add_command(label="Add Account", command=addAccount)
 
@@ -895,6 +922,7 @@ except:
 if len(ERR) > 4:
         text.config(state=NORMAL)
         text.insert(1.0, ERRORS_SIGS['generic'])
+        text.config(state=DISABLED)
 
 ERR.append(getTime() + "- Main window started")
 
