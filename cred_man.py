@@ -2,6 +2,7 @@
 #
 # Copyright (c) 2013, theZacAttacks
 #
+# Manages the database filled with user information
 #
 
 import sqlite3
@@ -71,7 +72,8 @@ def getScreenNames():
 
 # gets the id of the user in the db
 def getUserId(name):
-    return DB_CUR.execute('''SELECT id FROM creds WHERE screen_name = '%s' ''' %
+    return DB_CUR.execute('''SELECT id FROM creds
+    WHERE screen_name = '%s' ''' %
                           b64encode(name)).fetchone()[0]
 
 
@@ -137,9 +139,8 @@ else:
     OLD_CREDS = UNIX_PATH.split('.db')[0]
 
 if path.exists(OLD_CREDS):
-    f = open(OLD_CREDS, 'r')
-    creds = f.read().split('\n')
-    f.close()
+    with open(OLD_CREDS, 'r') as f:
+        creds = f.read().split('\n')
     ins = Api(consumer_key='qJwaqOuIuvZKlxwF4izCw',
               consumer_secret='53dJ9tHJ77tAE8ywZIEU60JYPyoRU9jY2v0d58nI8',
               access_token_key=creds[0],
