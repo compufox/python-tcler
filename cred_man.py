@@ -94,16 +94,16 @@ def getUser(num):
     row = DB_CUR.execute('SELECT screen_name FROM creds WHERE id = ?',
                          (str(num))
                          ).fetchall()
-    print row
-#    return b64decode(row[0])
+#    print row
+    return b64decode(row[0][0])
 
 
 # gets the user credentials based on the screen name
 def getUserCreds(name):
     res = DB_CUR.execute('''SELECT key, secret FROM creds
-    WHERE screen_name = ?''',
-                         (str(b64encode(name)))
-                         ).fetchall()[0]
+    WHERE screen_name = '%s' ''' %
+                         b64encode(name)
+                         ).fetchone()
     res = (b64decode(res[0]), b64decode(res[1]))
     return res
 

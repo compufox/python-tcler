@@ -688,15 +688,14 @@ def delThreader(event=None):
 #   button.
 def update(shot, last_id):
         if shot != 1:
-                for i in range(18):
+                for i in range(20):
                         sleep(5)
                         if not STREAM_UPDATE:
                                 break
                 while STREAM_UPDATE:
                         STATUSES = list()
                         try:
-                                STATUSES = API.GetHomeTimeline(since_id=last_id
-                                                               )
+                                STATUSES = API.GetHomeTimeline(since_id=last_id)
                                 if len(STATUSES) != 0:
                                         last_id = STATUSES[0].id
                                 if (
@@ -771,7 +770,7 @@ def update(shot, last_id):
                                            + ERRORS_SIGS['net'], 'ERR'))
 
 # checks the user database and checks if it exists
-if cred_man.getTableStatus():
+if not cred_man.getTableStatus():
         get_access_token.startLogin()
 
 # gets the user's creds
@@ -859,7 +858,7 @@ menu.add_command(label="Delete last tweet", command=delThreader)
 menu.add_command(label="Shorten link", command=shortThreader)
 menu.add_cascade(label="Accounts", menu=acctMenu)
 menu.add_separator()
-menu.add_command(label="Quit", command=lambda x: quit(UPDATE_THREAD))
+menu.add_command(label="Quit", command=lambda: quit(UPDATE_THREAD))
 
 for acct in cred_man.getScreenNames():
         acctMenu.add_command(label=acct, command=lambda x: switchToAcct(acct))
